@@ -12,7 +12,7 @@ const NotesWindow = styled.div`
   border: none;
   background-color: #fff;
   border-radius: 4px;
-  padding: 15px;
+  padding: 24px;
 `;
 
 const MasterButton = styled.button`
@@ -20,8 +20,8 @@ const MasterButton = styled.button`
   background-color: transparent;
   cursor: pointer;
   position: absolute;
-  bottom: 10px;
-  right: 10px;
+  bottom: 2px;
+  right: 40px;
 `;
 
 const App: React.FC = () => {
@@ -32,37 +32,24 @@ const App: React.FC = () => {
       isStriked: false,
       showCheckbox: false,
     },
-    {
-      date: "2023-10-17",
-      text: "Вторая заметка",
-      isStriked: true,
-      showCheckbox: true,
-    },
-    {
-      date: "2023-10-17",
-      text: "Третья заметка",
-      isStriked: false,
-      showCheckbox: false,
-    },
-    {
-      date: "2023-10-17",
-      text: "Еще одна заметка",
-      isStriked: true,
-      showCheckbox: true,
-    },
   ]);
   const [currentNoteIndex, setCurrentNoteIndex] = useState<number | null>(null);
   const notesRef = useRef<HTMLTextAreaElement[]>([]);
-
   const handleButtonClick = () => {
     if (currentNoteIndex !== null) {
-      setNotes(
-        notes.map((note, index) =>
+      setNotes((prevNotes) =>
+        prevNotes.map((note, index) =>
           index === currentNoteIndex
             ? { ...note, showCheckbox: !note.showCheckbox, isStriked: false }
             : note
         )
       );
+
+      setTimeout(() => {
+        if (notesRef.current[currentNoteIndex]) {
+          notesRef.current[currentNoteIndex].focus();
+        }
+      }, 0);
     }
   };
 

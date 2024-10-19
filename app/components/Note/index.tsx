@@ -1,6 +1,17 @@
 "use client";
 import React, { forwardRef } from "react";
-import styled from "styled-components";
+import styled, { keyframes } from "styled-components";
+
+const fadeIn = keyframes`
+  0% {
+    opacity: 0;
+    max-height: 0;
+  }
+  100% {
+    opacity: 1;
+    max-height: 200px;   
+  }
+`;
 
 interface NoteProps {
   date: string;
@@ -23,6 +34,8 @@ const NoteContainer = styled.div`
   border-radius: 4px;
   position: relative;
   column-gap: 10px;
+
+  animation: ${fadeIn} 0.5s ease-out forwards;
 `;
 
 const DateText = styled.span`
@@ -54,7 +67,7 @@ const NoteText = styled.textarea<{
   resize: none;
   padding: 10px;
   padding-left: ${(props) => (props.$showCheckbox ? "67px" : "48px")};
-
+  transition: background-color 0.3s ease;
   &:active {
     background-color: ${(props) =>
       props.$showCheckbox ? "#ecf3eb" : "#f1f1f1"};
