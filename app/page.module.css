@@ -18,7 +18,8 @@
   background-color: #fff;
   border: none !important;
   border-radius: 6px;
-
+  width: 400px;
+  
   @media (max-width: 500px) {
     width: 100%;
   }

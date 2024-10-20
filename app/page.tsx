@@ -13,6 +13,7 @@ const NotesWindow = styled.div`
   background-color: #fff;
   border-radius: 4px;
   padding: 24px;
+  width: 100%;
 `;
 
 const MasterButton = styled.button`
@@ -115,15 +116,16 @@ const App: React.FC = () => {
 
   const handleEnterPress = (position: number) => {
     if (currentNoteIndex !== null) {
-      console.log(position);
       const currentNote = notes[currentNoteIndex];
-      const textBefore = currentNote.text.slice(0, position);
-      const textAfter = currentNote.text.slice(position);
+      const textBefore = currentNote?.text?.slice(0, position) || "";
+      const textAfter = currentNote?.text?.slice(position) || "hieta";
+      console.log(position, textBefore, textAfter, currentNote);
+
       const newNote = {
         date: new Date().toISOString().split("T")[0],
         text: textAfter,
         isStriked: false,
-        showCheckbox: currentNote.showCheckbox,
+        showCheckbox: currentNote?.showCheckbox || false,
       };
 
       setNotes((prevNotes) => [
@@ -157,6 +159,8 @@ const App: React.FC = () => {
   };
 
   const handleMergeWithPrevious = (index: number) => {
+    const prevNoteText = notes[index > 0 ? index - 1 : 0].text.length;
+
     if (index > 0) {
       const newText = notes[index - 1].text + notes[index].text;
       const newNotes = notes
@@ -171,6 +175,11 @@ const App: React.FC = () => {
       setTimeout(() => {
         if (notesRef.current[index - 1]) {
           notesRef.current[index - 1].focus();
+          notesRef.current[index - 1].setSelectionRange(
+            prevNoteText,
+            prevNoteText
+          );
+          setCurrentNoteIndex(index - 1)
         }
       }, 0);
     }
@@ -180,16 +189,11 @@ const App: React.FC = () => {
     const newNotes = notes.filter((_, i) => i !== index);
     setNotes(newNotes);
 
+    const prevIndex = index > 0 ? index - 1 : 0;
     setTimeout(() => {
-      const prevIndex = index > 0 ? index - 1 : 0;
+      setCurrentNoteIndex(prevIndex);
       if (notesRef.current[prevIndex]) {
-        const prevNoteText = notes[prevIndex].text.length;
         notesRef.current[prevIndex].focus();
-        notesRef.current[prevIndex].setSelectionRange(
-          prevNoteText,
-          prevNoteText
-        );
-        setCurrentNoteIndex(prevIndex);
       }
     }, 0);
   };
@@ -239,8 +243,8 @@ const App: React.FC = () => {
               <path
                 d="M4 7.21429L6.1375 9.25L11.125 4.5"
                 stroke="#B5B5BA"
-                stroke-linecap="round"
-                stroke-linejoin="round"
+                strokeLinecap="round"
+                strokeLinejoin="round"
               />
             </svg>
           </MasterButton>

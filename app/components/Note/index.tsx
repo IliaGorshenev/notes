@@ -90,8 +90,8 @@ const NoteText = styled.textarea<{
 const TaskCheckbox = styled.input.attrs({ type: "checkbox" })`
   position: absolute;
   position: absolute;
-  top: 13px;
-  left: 48px;
+  top: 10px;
+  left: 46px;
 `;
 
 const formatDate = (date: string) => {
