@@ -4,6 +4,13 @@ import styled from "styled-components";
 import Note from "./components/Note";
 import styles from "./page.module.css";
 
+const resizeTextArea = (element: HTMLTextAreaElement) => {
+  element.style.height = "auto";
+  if (element.scrollHeight > element.clientHeight) {
+    element.style.height = `${element.scrollHeight}px`;
+  }
+};
+
 const NotesWindow = styled.div`
   display: flex;
   flex-direction: column;
@@ -14,6 +21,8 @@ const NotesWindow = styled.div`
   border-radius: 4px;
   padding: 24px;
   width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
 `;
 
 const MasterButton = styled.button`
@@ -152,6 +161,13 @@ const App: React.FC = () => {
     }, 0);
   };
 
+  const resizeTextArea = (element: HTMLTextAreaElement) => {
+    element.style.height = "auto";
+    if (element.scrollHeight > element.clientHeight) {
+      element.style.height = `${element.scrollHeight}px`;
+    }
+  };
+
   const handleEnterPress = (position: number) => {
     if (currentNoteIndex !== null && currentNoteIndex < notes.length) {
       const currentNote = notes[currentNoteIndex];
@@ -193,6 +209,12 @@ const App: React.FC = () => {
             notesRef.current[currentNoteIndex + 1].focus();
             notesRef.current[currentNoteIndex + 1].setSelectionRange(0, 0);
             setCurrentNoteIndex(currentNoteIndex + 1);
+            resizeTextArea(notesRef.current[currentNoteIndex + 1]);
+          }
+        }, 0);
+        setTimeout(() => {
+          if (notesRef.current[currentNoteIndex]) {
+            resizeTextArea(notesRef.current[currentNoteIndex]);
           }
         }, 0);
       }

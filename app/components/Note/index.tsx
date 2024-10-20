@@ -2,17 +2,30 @@
 import React, { forwardRef } from "react";
 import styled, { keyframes } from "styled-components";
 
-const fadeIn = keyframes`
+const fadeInOpacity = keyframes`
   0% {
     opacity: 0;
-    max-height: 0;
   }
   100% {
     opacity: 1;
-    max-height: 200px;   
   }
 `;
 
+const fadeInHeight = keyframes`
+  0% {
+    max-height: 0;
+  }
+  100% {
+    max-height: 2000px;   
+  }
+`;
+
+const resizeTextArea = (element: HTMLTextAreaElement) => {
+  element.style.height = "auto";
+  if (element.scrollHeight > element.clientHeight) {
+    element.style.height = `${element.scrollHeight}px`;
+  }
+};
 interface NoteProps {
   date: string;
   text: string;
@@ -35,7 +48,8 @@ const NoteContainer = styled.div`
   position: relative;
   column-gap: 10px;
 
-  animation: ${fadeIn} 0.5s ease-out forwards;
+  animation: ${fadeInOpacity} 0.9s ease-out forwards;
+  animation: ${fadeInHeight} 6s ease-out forwards;
 `;
 
 const DateText = styled.span`
@@ -68,6 +82,8 @@ const NoteText = styled.textarea<{
   padding: 10px;
   padding-left: ${(props) => (props.$showCheckbox ? "67px" : "48px")};
   transition: background-color 0.3s ease;
+  max-height: auto;
+
   &:active {
     background-color: ${(props) =>
       props.$showCheckbox ? "#ecf3eb" : "#f1f1f1"};
@@ -147,12 +163,6 @@ const Note = forwardRef<HTMLTextAreaElement, NoteProps>(
       resizeTextArea(e.target);
     };
 
-    const resizeTextArea = (element: HTMLTextAreaElement) => {
-      element.style.height = "auto";
-      if (element.scrollHeight > element.clientHeight) {
-        element.style.height = `${element.scrollHeight}px`;
-      }
-    };
 
     React.useEffect(() => {
       if (ref && (ref as React.RefObject<HTMLTextAreaElement>).current) {
