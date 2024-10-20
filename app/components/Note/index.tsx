@@ -148,8 +148,10 @@ const Note = forwardRef<HTMLTextAreaElement, NoteProps>(
     };
 
     const resizeTextArea = (element: HTMLTextAreaElement) => {
-      element.style.height = "auto"; // Reset height
-      element.style.height = `${element.scrollHeight}px`; // Set to scroll height
+      element.style.height = "auto";
+      if (element.scrollHeight > element.clientHeight) {
+        element.style.height = `${element.scrollHeight}px`;
+      }
     };
 
     React.useEffect(() => {
