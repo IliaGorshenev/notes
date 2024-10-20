@@ -118,7 +118,7 @@ const App: React.FC = () => {
     if (currentNoteIndex !== null) {
       const currentNote = notes[currentNoteIndex];
       const textBefore = currentNote?.text?.slice(0, position) || "";
-      const textAfter = currentNote?.text?.slice(position) || "hieta";
+      const textAfter = currentNote?.text?.slice(position) || "";
       console.log(position, textBefore, textAfter, currentNote);
 
       const newNote = {
