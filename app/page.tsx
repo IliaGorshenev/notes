@@ -25,6 +25,26 @@ const MasterButton = styled.button`
   right: 40px;
 `;
 
+const Button = styled.button`
+  border: none;
+  background-color: #fff;
+  color: #73b9a1;
+  cursor: pointer;
+  margin: auto;
+  padding: 10px 30px;
+  display: flex;
+  column-gap: 10px;
+  font-size: 16px;
+  line-height: 26px;
+  align-items: center;
+  transition: color 0.2s ease-in-out;
+
+  &:hover {
+    color: #42846d;
+    transition: color 0.2s ease-in-out;
+  }
+`;
+
 const App: React.FC = () => {
   const [notes, setNotes] = useState([
     {
@@ -113,40 +133,69 @@ const App: React.FC = () => {
       )
     );
   };
+  const handleNewNote = () => {
+    setNotes((prevNotes) => [
+      ...prevNotes,
+      {
+        date: new Date().toISOString().split("T")[0],
+        text: "",
+        isStriked: false,
+        showCheckbox: false,
+      },
+    ]);
+
+    setTimeout(() => {
+      setCurrentNoteIndex(notes.length);
+      if (notesRef.current[notes.length]) {
+        notesRef.current[notes.length].focus();
+      }
+    }, 0);
+  };
 
   const handleEnterPress = (position: number) => {
-    if (currentNoteIndex !== null) {
+    if (currentNoteIndex !== null && currentNoteIndex < notes.length) {
       const currentNote = notes[currentNoteIndex];
       const textBefore = currentNote?.text?.slice(0, position) || "";
       const textAfter = currentNote?.text?.slice(position) || "";
-      console.log(position, textBefore, textAfter, currentNote);
 
-      const newNote = {
-        date: new Date().toISOString().split("T")[0],
-        text: textAfter,
-        isStriked: false,
-        showCheckbox: currentNote?.showCheckbox || false,
-      };
+      const emptyTaskChecker =
+        position === 0 &&
+        currentNote.showCheckbox === true &&
+        !(currentNote.text.length > 0);
 
-      setNotes((prevNotes) => [
-        ...prevNotes.slice(0, currentNoteIndex + 1),
-        newNote,
-        ...prevNotes.slice(currentNoteIndex + 1),
-      ]);
+      if (emptyTaskChecker) {
+        setNotes((prevNotes) =>
+          prevNotes.map((note, index) =>
+            index === currentNoteIndex ? { ...note, showCheckbox: false } : note
+          )
+        );
+      } else {
+        const newNote = {
+          date: new Date().toISOString().split("T")[0],
+          text: textAfter,
+          isStriked: false,
+          showCheckbox: currentNote?.showCheckbox || false,
+        };
 
-      setTimeout(() => {
-        if (notesRef.current[currentNoteIndex + 1]) {
-          notesRef.current[currentNoteIndex + 1].focus();
-          notesRef.current[currentNoteIndex + 1].setSelectionRange(0, 0);
-          setCurrentNoteIndex(currentNoteIndex + 1);
-        }
-      }, 0);
+        setNotes((prevNotes) => {
+          const updatedNotes = [
+            ...prevNotes.slice(0, currentNoteIndex + 1),
+            newNote,
+            ...prevNotes.slice(currentNoteIndex + 1),
+          ];
+          return updatedNotes.map((note, index) =>
+            index === currentNoteIndex ? { ...note, text: textBefore } : note
+          );
+        });
 
-      setNotes((prevNotes) =>
-        prevNotes.map((note, index) =>
-          index === currentNoteIndex ? { ...note, text: textBefore } : note
-        )
-      );
+        setTimeout(() => {
+          if (notesRef.current[currentNoteIndex + 1]) {
+            notesRef.current[currentNoteIndex + 1].focus();
+            notesRef.current[currentNoteIndex + 1].setSelectionRange(0, 0);
+            setCurrentNoteIndex(currentNoteIndex + 1);
+          }
+        }, 0);
+      }
     }
   };
 
@@ -179,7 +228,7 @@ const App: React.FC = () => {
             prevNoteText,
             prevNoteText
           );
-          setCurrentNoteIndex(index - 1)
+          setCurrentNoteIndex(index - 1);
         }
       }, 0);
     }
@@ -224,6 +273,33 @@ const App: React.FC = () => {
               />
             </div>
           ))}
+          {notes.length === 0 && (
+            <Button onClick={handleNewNote}>
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 20 20"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M3 10H17"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+                <path
+                  d="M10 17V3"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+              Добавить заметку
+            </Button>
+          )}
           <MasterButton onClick={handleButtonClick}>
             <svg
               width="14"
