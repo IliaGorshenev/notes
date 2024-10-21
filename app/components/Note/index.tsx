@@ -159,7 +159,7 @@ const Note = forwardRef<HTMLDivElement, NoteProps>(
       animations: false,
       defaultStyles: true,
     });
-
+    // @typescript-eslint/no-explicit-any
     const handleKeyDown = (event: any) => {
       if (event.key === "Backspace") {
         const textCursorPosition = editor.getTextCursorPosition();
