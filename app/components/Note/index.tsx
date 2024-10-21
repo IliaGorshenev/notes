@@ -20,7 +20,7 @@ import {
   TextAlignButton,
   useCreateBlockNote,
 } from "@blocknote/react";
-import { forwardRef } from "react";
+import { forwardRef, useEffect } from "react";
 import styled from "styled-components";
 const getMentionMenuItems = (
   editor: typeof schema.BlockNoteEditor
@@ -160,20 +160,28 @@ const Note = forwardRef<HTMLDivElement, NoteProps>(
       defaultStyles: true,
     });
     // @typescript-eslint/no-explicit-any
-    const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
-      if (event.key === "Backspace") {
-        const textCursorPosition = editor.getTextCursorPosition();
-        if (
-          !textCursorPosition?.prevBlock &&
-
-          // @ts-expect-error @typescript-eslint/ban-ts-comment
-          !(textCursorPosition?.block?.content?.length > 0)
-        ) {
-          onDeleteNote(index);
+    useEffect(() => {
+      const handleKeyDown = (event) => {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          alert(event);
         }
-      }
-    };
+        if (event.key === "Backspace") {
+          const textCursorPosition = editor.getTextCursorPosition();
+          if (
+            !textCursorPosition?.prevBlock &&
+            !(textCursorPosition?.block?.content?.length > 0)
+          ) {
+            onDeleteNote(index);
+          }
+        }
+      };
 
+      document.addEventListener("keydown", handleKeyDown);
+      return () => {
+        document.removeEventListener("keydown", handleKeyDown);
+      };
+    }, []);
     return (
       <NoteContainer>
         <DateText>{formatDate(date)}</DateText>
@@ -181,7 +189,7 @@ const Note = forwardRef<HTMLDivElement, NoteProps>(
         {editor?.document && (
           <BlockNoteView
             ref={ref}
-            onKeyDown={handleKeyDown}
+            // onKeyDown={handleKeyDown}
             editor={editor}
             formattingToolbar={false}
             slashMenu={true}

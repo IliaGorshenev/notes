@@ -181,6 +181,7 @@ const App = () => {
   const notesRef = useRef<HTMLDivElement[]>([]);
 
   const handleContentChange = (index: number, newContent: Block[]) => {
+    console.log("sdafsadf", [newContent]);
     const updatedNotes = notes.map((note, i) =>
       i === index ? { ...note, content: newContent } : note
     );
