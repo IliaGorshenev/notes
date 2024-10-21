@@ -160,12 +160,12 @@ const Note = forwardRef<HTMLDivElement, NoteProps>(
       defaultStyles: true,
     });
     // @typescript-eslint/no-explicit-any
-    const handleKeyDown = (event: any) => {
+    const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
       if (event.key === "Backspace") {
         const textCursorPosition = editor.getTextCursorPosition();
         if (
           !textCursorPosition?.prevBlock &&
-          // @ts-expect-error
+          // // @ts-expect-error: Content might be undefined
           !(textCursorPosition?.block?.content?.length > 0)
         ) {
           onDeleteNote(index);
@@ -184,7 +184,7 @@ const Note = forwardRef<HTMLDivElement, NoteProps>(
           slashMenu={true}
           sideMenu={false}
           onChange={() => {
-            // @ts-expect-error
+            // // @ts-expect-error: Content might be undefined
             onContentChange(editor.document);
           }}
         >
