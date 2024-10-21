@@ -15,7 +15,6 @@ export const Mention = createReactInlineContentSpec(
   },
   {
     render: (props) => (
-      // @ts-expect-error @typescript-eslint/ban-ts-comment
       <span style={{ backgroundColor: "#73b9a1" }}>
         @{props.inlineContent.props.user}
       </span>
