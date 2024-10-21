@@ -94,7 +94,7 @@ const App = () => {
             {
               type: "text",
               text: "Сохраненная заметка",
-              // @ts-ignore
+              // @ts-expect-error
               styles: {},
             },
           ],
@@ -118,7 +118,7 @@ const App = () => {
             {
               type: "text",
               text: "Tasker",
-              // @ts-ignore
+              // @ts-expect-error
               styles: {},
             },
           ],
@@ -137,7 +137,7 @@ const App = () => {
             {
               type: "text",
               text: "First",
-              // @ts-ignore
+              // @ts-expect-error
               styles: {},
             },
           ],
@@ -156,7 +156,7 @@ const App = () => {
             {
               type: "text",
               text: "Second",
-              // @ts-ignore
+              // @ts-expect-error-error-error-error-error-error
 
               styles: {},
             },
@@ -181,14 +181,14 @@ const App = () => {
   const handleNewNote = () => {
     const newNote: Note = {
       date: new Date().toISOString().split("T")[0],
-      // @ts-ignore
+      // @ts-expect-error
 
       content: [{ type: "paragraph", content: "" }], // Initialize with an empty array
     };
     const updatedNotes = [...notes, newNote];
     setNotes(updatedNotes);
   };
-  // @ts-ignore
+  // @ts-expect-error
   const handleDeleteNote = (index: number) => {
     const updatedNotes = [...notes];
     updatedNotes.splice(index, 1); // Remove the note at the given index
@@ -207,10 +207,10 @@ const App = () => {
                 if (el) notesRef.current[index] = el;
               }}
               date={note.date}
-              // @ts-ignore
+              // @ts-expect-error
               content={note.content}
               onContentChange={(newContent) =>
-                // @ts-ignore
+                // @ts-expect-error-error
 
                 handleContentChange(index, newContent)
               }

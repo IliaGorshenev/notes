@@ -165,7 +165,7 @@ const Note = forwardRef<HTMLDivElement, NoteProps>(
         const textCursorPosition = editor.getTextCursorPosition();
         if (
           !textCursorPosition?.prevBlock &&
-          // @ts-ignore
+          // @ts-expect-error
           !(textCursorPosition?.block?.content?.length > 0)
         ) {
           onDeleteNote(index);
@@ -184,7 +184,7 @@ const Note = forwardRef<HTMLDivElement, NoteProps>(
           slashMenu={true}
           sideMenu={false}
           onChange={() => {
-            // @ts-ignore
+            // @ts-expect-error
             onContentChange(editor.document);
           }}
         >
