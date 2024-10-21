@@ -165,6 +165,7 @@ const Note = forwardRef<HTMLDivElement, NoteProps>(
         const textCursorPosition = editor.getTextCursorPosition();
         if (
           !textCursorPosition?.prevBlock &&
+
           // @ts-expect-error @typescript-eslint/ban-ts-comment
           !(textCursorPosition?.block?.content?.length > 0)
         ) {
@@ -176,6 +177,7 @@ const Note = forwardRef<HTMLDivElement, NoteProps>(
     return (
       <NoteContainer>
         <DateText>{formatDate(date)}</DateText>
+
         {editor?.document && (
           <BlockNoteView
             ref={ref}
