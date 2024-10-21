@@ -1,55 +1,126 @@
 "use client";
-import React, { forwardRef } from "react";
-import styled, { keyframes } from "styled-components";
+import {
+  Block,
+  BlockNoteSchema,
+  defaultInlineContentSpecs,
+  filterSuggestionItems,
+} from "@blocknote/core";
+import { BlockNoteView } from "@blocknote/mantine";
+import {
+  BasicTextStyleButton,
+  ColorStyleButton,
+  CreateLinkButton,
+  createReactInlineContentSpec,
+  DefaultReactSuggestionItem,
+  FileCaptionButton,
+  FileReplaceButton,
+  FormattingToolbar,
+  FormattingToolbarController,
+  SuggestionMenuController,
+  TextAlignButton,
+  useCreateBlockNote,
+} from "@blocknote/react";
+import { forwardRef } from "react";
+import styled from "styled-components";
+const getMentionMenuItems = (
+  editor: typeof schema.BlockNoteEditor
+): DefaultReactSuggestionItem[] => {
+  const mentions = [
+    {
+      type: "mention",
+      props: { user: "Steve", date: "", link: "" },
+      label: "Steve",
+    },
+    {
+      type: "mention",
+      props: { user: "Bob", date: "", link: "" },
+      label: "Bob",
+    },
+    {
+      type: "mention",
+      props: { user: "Joe", date: "", link: "" },
+      label: "Joe",
+    },
+    {
+      type: "mention",
+      props: { user: "Mike", date: "", link: "" },
+      label: "Mike",
+    },
+    {
+      type: "mention",
+      props: { user: "", date: "2023-10-17", link: "" },
+      label: "October 17, 2023",
+    },
+    {
+      type: "mention",
+      props: { user: "", date: "2023-12-25", link: "" },
+      label: "December 25, 2023",
+    },
+    {
+      type: "mention",
+      props: { user: "", date: "", link: "https://example.com" },
+      label: "Example Link",
+    },
+    {
+      type: "mention",
+      props: { user: "", date: "", link: "https://anotherlink.com" },
+      label: "Another Link",
+    },
+  ];
 
-const fadeInOpacity = keyframes`
-  0% {
-    opacity: 0;
-  }
-  100% {
-    opacity: 1;
-  }
-`;
-
-const fadeInHeight = keyframes`
-  0% {
-    max-height: 0;
-  }
-  100% {
-    max-height: 2000px;   
-  }
-`;
-
-const resizeTextArea = (element: HTMLTextAreaElement) => {
-  element.style.height = "auto";
-  if (element.scrollHeight > element.clientHeight) {
-    element.style.height = `${element.scrollHeight}px`;
-  }
+  return mentions.map((mention) => ({
+    title: mention.label,
+    onItemClick: () => {
+      editor.insertInlineContent([
+        { type: mention.type, props: mention.props },
+        " ", // add a space after the mention
+      ]);
+    },
+  }));
 };
-interface NoteProps {
-  date: string;
-  text: string;
-  isStriked: boolean;
-  showCheckbox: boolean;
-  onTextChange: (text: string, selectionStart: number) => void;
-  onCheckboxChange: () => void;
-  onEnterPress: (position: number) => void;
-  onTransformToTask: () => void;
-  onDelete: () => void;
-  onRemoveCheckbox: () => void;
-  onMergeWithPrevious: () => void;
-}
+
+const Mention = createReactInlineContentSpec(
+  {
+    type: "mention",
+    propSchema: {
+      user: { default: "" },
+      date: { default: "" },
+      link: { default: "" },
+    },
+    content: "none",
+  },
+  {
+    render: (props) => {
+      const { user, date, link } = props.inlineContent.props;
+      return (
+        <span style={{ backgroundColor: "#c1e7da" }}>
+          @{user || date || link}
+        </span>
+      );
+    },
+  }
+);
+
+// Our schema with inline content specs, which contain the configs and
+// implementations for inline content that we want our editor to use.
+
+const schema = BlockNoteSchema.create({
+  inlineContentSpecs: {
+    ...defaultInlineContentSpecs,
+    mention: Mention,
+  },
+});
 
 const NoteContainer = styled.div`
   margin: 0;
-  display: flex;
-  align-items: flex-start;
+  display: grid;
+  grid-template-columns: 1fr;
   border-radius: 4px;
-  position: relative;
   column-gap: 10px;
-
-  animation: ${fadeInOpacity} 0.9s ease-out forwards;
-  animation: ${fadeInHeight} 6s ease-out forwards;
+  position: relative;
+  max-width: 100%;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 `;
 
 const DateText = styled.span`
@@ -58,56 +129,10 @@ const DateText = styled.span`
   line-height: 16px;
   margin-top: 3px;
   white-space: nowrap;
-  width: 40px;
   position: absolute;
-  top: 8px;
+  top: 5px;
   left: 5px;
-`;
-
-const NoteText = styled.textarea<{
-  $isStriked: boolean;
-  $showCheckbox: boolean;
-}>`
-  display: block;
-  width: 100%;
-  overflow: hidden;
-  align-items: center;
-  padding: 0;
-  min-height: 10px;
-  font-size: 14px;
-  line-height: 20px;
-  border: none;
-  text-decoration: ${(props) => (props.$isStriked ? "line-through" : "none")};
-  resize: none;
-  padding: 10px;
-  padding-left: ${(props) => (props.$showCheckbox ? "67px" : "48px")};
-  transition: background-color 0.3s ease;
-  max-height: auto;
-
-  &:active {
-    background-color: ${(props) =>
-      props.$showCheckbox ? "#ecf3eb" : "#f1f1f1"};
-    outline: none;
-  }
-
-  &:hover {
-    background-color: ${(props) =>
-      props.$showCheckbox ? "#ecf3eb" : "#f1f1f1"};
-    outline: none;
-  }
-
-  &:focus {
-    outline: none;
-    background-color: ${(props) =>
-      props.$showCheckbox ? "#ecf3eb" : "#f1f1f1"};
-  }
-`;
-
-const TaskCheckbox = styled.input.attrs({ type: "checkbox" })`
-  position: absolute;
-  top: 10px;
-  cursor: pointer;
-  left: 46px;
+  z-index: 10;
 `;
 
 const formatDate = (date: string) => {
@@ -116,73 +141,102 @@ const formatDate = (date: string) => {
   return dateObj.toLocaleDateString("en-US", options);
 };
 
-const Note = forwardRef<HTMLTextAreaElement, NoteProps>(
-  (
-    {
-      date,
-      text,
-      isStriked,
-      showCheckbox,
-      onTextChange,
-      onCheckboxChange,
-      onEnterPress,
-      onTransformToTask,
-      onDelete,
-      onRemoveCheckbox,
-      onMergeWithPrevious,
-    },
-    ref
-  ) => {
-    const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-      const selectionStart = e.currentTarget.selectionStart;
+interface NoteProps {
+  date: string;
+  content: Block[];
+  onContentChange: (content: Block) => void;
+  onDeleteNote: (index: number) => void;
+  index: number;
+}
 
-      if (e.key === "Enter") {
-        e.preventDefault();
-        onEnterPress(selectionStart);
-      } else if (e.key === "Backspace") {
-        if (text === "") {
-          onDelete();
-        } else if (selectionStart === 0) {
-          if (showCheckbox) {
-            onRemoveCheckbox();
-          } else {
-            onMergeWithPrevious();
-          }
+const Note = forwardRef<HTMLDivElement, NoteProps>(
+  ({ date, content, onContentChange, onDeleteNote, index }, ref) => {
+    const editor = useCreateBlockNote({
+      initialContent: content || { type: "paragraph", content: "" },
+      // onChange: ({ document }) => onContentChange(document.blocks),
+      schema: schema,
+      trailingBlock: false,
+      animations: false,
+      defaultStyles: true,
+    });
+
+    const handleKeyDown = (event: any) => {
+      if (event.key === "Backspace") {
+        const textCursorPosition = editor.getTextCursorPosition();
+        if (
+          !textCursorPosition?.prevBlock &&
+          // @ts-ignore
+          !(textCursorPosition?.block?.content?.length > 0)
+        ) {
+          onDeleteNote(index);
         }
       }
     };
 
-    const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-      const selectionStart = e.currentTarget.selectionStart;
-      const newText = e.target.value;
-
-      if (newText.includes("[] ")) {
-        return onTransformToTask();
-      }
-      onTextChange(newText, selectionStart);
-      resizeTextArea(e.target);
-    };
-
-
-    React.useEffect(() => {
-      if (ref && (ref as React.RefObject<HTMLTextAreaElement>).current) {
-        resizeTextArea((ref as React.RefObject<HTMLTextAreaElement>).current!);
-      }
-    }, [text, ref]);
     return (
       <NoteContainer>
         <DateText>{formatDate(date)}</DateText>
-        {showCheckbox && (
-          <TaskCheckbox onChange={onCheckboxChange} checked={isStriked} />
-        )}
-        <NoteText
+        <BlockNoteView
           ref={ref}
-          value={text}
-          $isStriked={isStriked}
-          $showCheckbox={showCheckbox}
-          onChange={handleInputChange}
           onKeyDown={handleKeyDown}
-        />
+          editor={editor}
+          formattingToolbar={false}
+          slashMenu={true}
+          sideMenu={false}
+          onChange={() => {
+            // @ts-ignore
+            onContentChange(editor.document);
+          }}
+        >
+          <FormattingToolbarController
+            formattingToolbar={() => (
+              <FormattingToolbar>
+                <FileCaptionButton key={"fileCaptionButton"} />
+                <FileReplaceButton key={"replaceFileButton"} />
+                <BasicTextStyleButton
+                  basicTextStyle={"bold"}
+                  key={"boldStyleButton"}
+                />
+                <BasicTextStyleButton
+                  basicTextStyle={"italic"}
+                  key={"italicStyleButton"}
+                />
+                <BasicTextStyleButton
+                  basicTextStyle={"underline"}
+                  key={"underlineStyleButton"}
+                />
+                <BasicTextStyleButton
+                  basicTextStyle={"strike"}
+                  key={"strikeStyleButton"}
+                />
+                <BasicTextStyleButton
+                  key={"codeStyleButton"}
+                  basicTextStyle={"code"}
+                />
+                <TextAlignButton
+                  textAlignment={"left"}
+                  key={"textAlignLeftButton"}
+                />
+                <TextAlignButton
+                  textAlignment={"center"}
+                  key={"textAlignCenterButton"}
+                />
+                <TextAlignButton
+                  textAlignment={"right"}
+                  key={"textAlignRightButton"}
+                />
+                <ColorStyleButton key={"colorStyleButton"} />
+                <CreateLinkButton key={"createLinkButton"} />
+              </FormattingToolbar>
+            )}
+          />
+          <SuggestionMenuController
+            triggerCharacter={"@"}
+            getItems={async (query) =>
+              filterSuggestionItems(getMentionMenuItems(editor), query)
+            }
+          />
+        </BlockNoteView>
       </NoteContainer>
     );
   }

@@ -1,15 +1,9 @@
 "use client";
-import React, { useRef, useState } from "react";
+import "@blocknote/core/fonts/inter.css";
+import "@blocknote/mantine/style.css";
+import { useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import Note from "./components/Note";
-import styles from "./page.module.css";
-
-const resizeTextArea = (element: HTMLTextAreaElement) => {
-  element.style.height = "auto";
-  if (element.scrollHeight > element.clientHeight) {
-    element.style.height = `${element.scrollHeight}px`;
-  }
-};
 
 const NotesWindow = styled.div`
   display: flex;
@@ -20,18 +14,10 @@ const NotesWindow = styled.div`
   background-color: #fff;
   border-radius: 4px;
   padding: 24px;
-  width: 100%;
+  width: 450px;
+  margin: 0 auto;
+  margin-top: 70px;
   box-sizing: border-box;
-  overflow: hidden;
-`;
-
-const MasterButton = styled.button`
-  border: none;
-  background-color: transparent;
-  cursor: pointer;
-  position: absolute;
-  bottom: 2px;
-  right: 40px;
 `;
 
 const Button = styled.button`
@@ -47,307 +33,217 @@ const Button = styled.button`
   line-height: 26px;
   align-items: center;
   transition: color 0.2s ease-in-out;
-
   &:hover {
     color: #42846d;
     transition: color 0.2s ease-in-out;
   }
 `;
+type Note = {
+  date: string;
+  content: Block[];
+};
 
-const App: React.FC = () => {
-  const [notes, setNotes] = useState([
+type Link = {
+  type: "link";
+  content: StyledText[];
+  href: string;
+};
+type Styles = {
+  bold: boolean;
+  italic: boolean;
+  underline: boolean;
+  strikethrough: boolean;
+  textColor: string;
+  backgroundColor: string;
+};
+
+type StyledText = {
+  type: "text";
+  text: string;
+  styles: Styles;
+};
+
+type InlineContent = Link | StyledText;
+type TableContent = {
+  type: "tableContent";
+  rows: {
+    cells: InlineContent[][];
+  }[];
+};
+type Block = {
+  id: string;
+  type: string;
+  props: Record<string, boolean | number | string>;
+  content: InlineContent[] | TableContent | undefined;
+  children: Block[];
+};
+const App = () => {
+  const [notes, setNotes] = useState<Note[]>([
     {
-      date: "2023-10-17",
-      text: "Первая заметка",
-      isStriked: false,
-      showCheckbox: false,
+      date: "2023-10-18",
+      content: [
+        {
+          id: "df0ef63a-6139-48dd-9075-8bfad7ec8ca6",
+          type: "paragraph",
+          props: {
+            textColor: "default",
+            backgroundColor: "default",
+            textAlignment: "left",
+          },
+          content: [
+            {
+              type: "text",
+              text: "Сохраненная заметка",
+              // @ts-ignore
+              styles: {},
+            },
+          ],
+          children: [],
+        },
+      ],
+    },
+    {
+      date: "2023-10-18",
+      content: [
+        {
+          id: "eac65698-34b0-44de-9887-2d1962d2ccbf",
+          type: "heading",
+          props: {
+            textColor: "default",
+            backgroundColor: "default",
+            textAlignment: "left",
+            level: 3,
+          },
+          content: [
+            {
+              type: "text",
+              text: "Tasker",
+              // @ts-ignore
+              styles: {},
+            },
+          ],
+          children: [],
+        },
+        {
+          id: "b7a2e9d9-89e2-4351-90a1-b0b30c307db5",
+          type: "checkListItem",
+          props: {
+            textColor: "default",
+            backgroundColor: "default",
+            textAlignment: "left",
+            checked: false,
+          },
+          content: [
+            {
+              type: "text",
+              text: "First",
+              // @ts-ignore
+              styles: {},
+            },
+          ],
+          children: [],
+        },
+        {
+          id: "a28384ae-46f0-43d3-a476-5332f86a9bb2",
+          type: "checkListItem",
+          props: {
+            textColor: "default",
+            backgroundColor: "default",
+            textAlignment: "left",
+            checked: false,
+          },
+          content: [
+            {
+              type: "text",
+              text: "Second",
+              // @ts-ignore
+
+              styles: {},
+            },
+          ],
+          children: [],
+        },
+      ],
     },
   ]);
-  const [currentNoteIndex, setCurrentNoteIndex] = useState<number | null>(null);
-  const notesRef = useRef<HTMLTextAreaElement[]>([]);
-  const handleButtonClick = () => {
-    if (currentNoteIndex !== null) {
-      setNotes((prevNotes) =>
-        prevNotes.map((note, index) =>
-          index === currentNoteIndex
-            ? { ...note, showCheckbox: !note.showCheckbox, isStriked: false }
-            : note
-        )
-      );
+  useEffect(() => {
+    console.log("notes", notes);
+  }, [notes]);
+  // const [currentNoteIndex, setCurrentNoteIndex] = useState<number | null>(null);
+  const notesRef = useRef<HTMLDivElement[]>([]);
 
-      setTimeout(() => {
-        if (notesRef.current[currentNoteIndex]) {
-          notesRef.current[currentNoteIndex].focus();
-        }
-      }, 0);
-    }
-  };
-
-  const handleTransformToTask = (index: number) => {
-    const updatedNotes = notes.map((note, i) => {
-      if (i === index) {
-        return {
-          ...note,
-          text: note.text.replace("[]", ""),
-          showCheckbox: !note.showCheckbox,
-          isStriked: false,
-        };
-      }
-      return note;
-    });
-
+  const handleContentChange = (index: number, newContent: Block[]) => {
+    const updatedNotes = notes.map((note, i) =>
+      i === index ? { ...note, content: newContent } : note
+    );
     setNotes(updatedNotes);
   };
-
-  const handleTextChange = (
-    index: number,
-    newText: string,
-    selectionStart: number
-  ) => {
-    if (newText.includes("\n")) {
-      const textBeforeCursor = newText.substring(0, selectionStart);
-      const textAfterCursor = newText
-        .substring(selectionStart)
-        .replace("\n", "");
-      const newNotes = [
-        ...notes.slice(0, index),
-        { ...notes[index], text: textBeforeCursor },
-        {
-          date: new Date().toISOString().split("T")[0],
-          text: textAfterCursor,
-          isStriked: notes[index].isStriked,
-          showCheckbox: notes[index].showCheckbox,
-        },
-        ...notes.slice(index + 1),
-      ];
-      setNotes(newNotes);
-      setTimeout(() => {
-        if (notesRef.current.length) {
-          notesRef.current[index + 1].focus();
-        }
-      }, 0);
-    } else {
-      setNotes(
-        notes.map((note, i) =>
-          i === index ? { ...note, text: newText } : note
-        )
-      );
-    }
-  };
-
-  const handleCheckboxChange = (index: number) => {
-    setNotes(
-      notes.map((note, i) =>
-        i === index ? { ...note, isStriked: !note.isStriked } : note
-      )
-    );
-  };
   const handleNewNote = () => {
-    setNotes((prevNotes) => [
-      ...prevNotes,
-      {
-        date: new Date().toISOString().split("T")[0],
-        text: "",
-        isStriked: false,
-        showCheckbox: false,
-      },
-    ]);
+    const newNote: Note = {
+      date: new Date().toISOString().split("T")[0],
+      // @ts-ignore
 
-    setTimeout(() => {
-      setCurrentNoteIndex(notes.length);
-      if (notesRef.current[notes.length]) {
-        notesRef.current[notes.length].focus();
-      }
-    }, 0);
+      content: [{ type: "paragraph", content: "" }], // Initialize with an empty array
+    };
+    const updatedNotes = [...notes, newNote];
+    setNotes(updatedNotes);
   };
-
-  const resizeTextArea = (element: HTMLTextAreaElement) => {
-    element.style.height = "auto";
-    if (element.scrollHeight > element.clientHeight) {
-      element.style.height = `${element.scrollHeight}px`;
-    }
-  };
-
-  const handleEnterPress = (position: number) => {
-    if (currentNoteIndex !== null && currentNoteIndex < notes.length) {
-      const currentNote = notes[currentNoteIndex];
-      const textBefore = currentNote?.text?.slice(0, position) || "";
-      const textAfter = currentNote?.text?.slice(position) || "";
-
-      const emptyTaskChecker =
-        position === 0 &&
-        currentNote.showCheckbox === true &&
-        !(currentNote.text.length > 0);
-
-      if (emptyTaskChecker) {
-        setNotes((prevNotes) =>
-          prevNotes.map((note, index) =>
-            index === currentNoteIndex ? { ...note, showCheckbox: false } : note
-          )
-        );
-      } else {
-        const newNote = {
-          date: new Date().toISOString().split("T")[0],
-          text: textAfter,
-          isStriked: false,
-          showCheckbox: currentNote?.showCheckbox || false,
-        };
-
-        setNotes((prevNotes) => {
-          const updatedNotes = [
-            ...prevNotes.slice(0, currentNoteIndex + 1),
-            newNote,
-            ...prevNotes.slice(currentNoteIndex + 1),
-          ];
-          return updatedNotes.map((note, index) =>
-            index === currentNoteIndex ? { ...note, text: textBefore } : note
-          );
-        });
-
-        setTimeout(() => {
-          if (notesRef.current[currentNoteIndex + 1]) {
-            notesRef.current[currentNoteIndex + 1].focus();
-            notesRef.current[currentNoteIndex + 1].setSelectionRange(0, 0);
-            setCurrentNoteIndex(currentNoteIndex + 1);
-            resizeTextArea(notesRef.current[currentNoteIndex + 1]);
-          }
-        }, 0);
-        setTimeout(() => {
-          if (notesRef.current[currentNoteIndex]) {
-            resizeTextArea(notesRef.current[currentNoteIndex]);
-          }
-        }, 0);
-      }
-    }
-  };
-
-  const handleRemoveCheckbox = (index: number) => {
-    setNotes(
-      notes.map((note, i) =>
-        i === index ? { ...note, showCheckbox: false } : note
-      )
-    );
-  };
-
-  const handleMergeWithPrevious = (index: number) => {
-    const prevNoteText = notes[index > 0 ? index - 1 : 0].text.length;
-
-    if (index > 0) {
-      const newText = notes[index - 1].text + notes[index].text;
-      const newNotes = notes
-        .map((note, i) => {
-          if (i === index - 1) {
-            return { ...note, text: newText };
-          }
-          return note;
-        })
-        .filter((_, i) => i !== index);
-      setNotes(newNotes);
-      setTimeout(() => {
-        if (notesRef.current[index - 1]) {
-          notesRef.current[index - 1].focus();
-          notesRef.current[index - 1].setSelectionRange(
-            prevNoteText,
-            prevNoteText
-          );
-          setCurrentNoteIndex(index - 1);
-        }
-      }, 0);
-    }
-  };
-
-  const handleDelete = (index: number) => {
-    const newNotes = notes.filter((_, i) => i !== index);
-    setNotes(newNotes);
-
-    const prevIndex = index > 0 ? index - 1 : 0;
-    setTimeout(() => {
-      setCurrentNoteIndex(prevIndex);
-      if (notesRef.current[prevIndex]) {
-        notesRef.current[prevIndex].focus();
-      }
-    }, 0);
+  // @ts-ignore
+  const handleDeleteNote = (index: number) => {
+    const updatedNotes = [...notes];
+    updatedNotes.splice(index, 1); // Remove the note at the given index
+    setNotes(updatedNotes);
+    console.log(updatedNotes);
   };
 
   return (
-    <div className={styles.page}>
-      <div className={styles.main}>
-        <NotesWindow>
-          {notes.map((note, index) => (
-            <div key={index} onMouseDown={() => setCurrentNoteIndex(index)}>
-              <Note
-                ref={(el) => {
-                  if (el) notesRef.current[index] = el;
-                }}
-                date={note.date}
-                text={note.text}
-                isStriked={note.isStriked}
-                showCheckbox={note.showCheckbox}
-                onTextChange={(text, selectionStart) =>
-                  handleTextChange(index, text, selectionStart)
-                }
-                onCheckboxChange={() => handleCheckboxChange(index)}
-                onEnterPress={(position) => handleEnterPress(position)}
-                onTransformToTask={() => handleTransformToTask(index)}
-                onDelete={() => handleDelete(index)}
-                onRemoveCheckbox={() => handleRemoveCheckbox(index)}
-                onMergeWithPrevious={() => handleMergeWithPrevious(index)}
-              />
-            </div>
-          ))}
-          {notes.length === 0 && (
-            <Button onClick={handleNewNote}>
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 20 20"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M3 10H17"
-                  stroke="currentColor"
-                  stroke-width="1.5"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                />
-                <path
-                  d="M10 17V3"
-                  stroke="currentColor"
-                  stroke-width="1.5"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                />
-              </svg>
-              Добавить заметку
-            </Button>
-          )}
-          <MasterButton onClick={handleButtonClick}>
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 14 14"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <rect
-                x="0.5"
-                y="0.5"
-                width="13"
-                height="13"
-                rx="2.5"
-                stroke="#B5B5BA"
-              />
-              <path
-                d="M4 7.21429L6.1375 9.25L11.125 4.5"
-                stroke="#B5B5BA"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </MasterButton>
-        </NotesWindow>
-      </div>
+    <div>
+      <NotesWindow>
+        {notes.map((note, index) => (
+          <div key={index}>
+            <Note
+              key={index} // Ensure unique key for each note
+              ref={(el) => {
+                if (el) notesRef.current[index] = el;
+              }}
+              date={note.date}
+              // @ts-ignore
+              content={note.content}
+              onContentChange={(newContent) =>
+                // @ts-ignore
+
+                handleContentChange(index, newContent)
+              }
+              onDeleteNote={() => handleDeleteNote(index)}
+            />
+          </div>
+        ))}
+        <Button onClick={handleNewNote}>
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 20 20"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M3 10H17"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+            <path
+              d="M10 17V3"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+          Добавить заметку
+        </Button>
+      </NotesWindow>
     </div>
   );
 };
