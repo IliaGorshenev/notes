@@ -174,9 +174,6 @@ const App = () => {
     setIsClient(true);
   }, []);
 
-  if (!isClient) {
-    return null; // Render nothing on the server
-  }
   useEffect(() => {
     console.log("notes", notes);
   }, [notes]);
@@ -205,6 +202,9 @@ const App = () => {
     console.log(updatedNotes);
   };
 
+  if (!isClient) {
+    return null; // Render nothing on the server
+  }
   return (
     <div>
       <NotesWindow>
