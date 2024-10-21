@@ -77,6 +77,7 @@ type Block = {
   content: InlineContent[] | TableContent | undefined;
   children: Block[];
 };
+
 const App = () => {
   const [notes, setNotes] = useState<Note[]>([
     {
@@ -94,7 +95,8 @@ const App = () => {
             {
               type: "text",
               text: "Сохраненная заметка",
-              // // // // // // // @ts-expect-error @typescript-eslint/ban-ts-comment   @typescript-eslint/ban-ts-comment.  @typescript-eslint/ban-ts-comment: Content might be undefined: Content might be undefined: Content might be undefined: Content might be undefinedror: Content might be undefined: Content might be undefined: Content might be undefined
+
+              // @ts-expect-error @typescript-eslint/ban-ts-comment
               styles: {},
             },
           ],
@@ -118,7 +120,7 @@ const App = () => {
             {
               type: "text",
               text: "Tasker",
-              // // // @ts-expect-error @typescript-eslint/ban-ts-comment   @typescript-eslint/ban-ts-comment: Content might be undefined: Content might be undefined
+             // @ts-expect-error @typescript-eslint/ban-ts-comment
               styles: {},
             },
           ],
@@ -137,7 +139,7 @@ const App = () => {
             {
               type: "text",
               text: "First",
-              // // @ts-expect-error @typescript-eslint/ban-ts-comment  : Content might be undefined
+// @ts-expect-error @typescript-eslint/ban-ts-comment
               styles: {},
             },
           ],
@@ -156,8 +158,7 @@ const App = () => {
             {
               type: "text",
               text: "Second",
-              // // @ts-expect-error @typescript-eslint/ban-ts-comment   @typescript-eslint/ban-ts-comment  : Content might be undefined-error-error-error-error-error
-
+// @ts-expect-error @typescript-eslint/ban-ts-comment
               styles: {},
             },
           ],
@@ -166,6 +167,13 @@ const App = () => {
       ],
     },
   ]);
+
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
   useEffect(() => {
     console.log("notes", notes);
   }, [notes]);
@@ -181,14 +189,13 @@ const App = () => {
   const handleNewNote = () => {
     const newNote: Note = {
       date: new Date().toISOString().split("T")[0],
-      // // @ts-expect-error @typescript-eslint/ban-ts-comment  : Content might be undefined
-
+// @ts-expect-error @typescript-eslint/ban-ts-comment
       content: [{ type: "paragraph", content: "" }], // Initialize with an empty array
     };
     const updatedNotes = [...notes, newNote];
     setNotes(updatedNotes);
   };
-  // // @ts-expect-error @typescript-eslint/ban-ts-comment  : Content might be undefined
+// @ts-expect-error @typescript-eslint/ban-ts-comment
   const handleDeleteNote = (index: number) => {
     const updatedNotes = [...notes];
     updatedNotes.splice(index, 1); // Remove the note at the given index
@@ -196,6 +203,9 @@ const App = () => {
     console.log(updatedNotes);
   };
 
+  if (!isClient) {
+    return null; // Render nothing on the server
+  }
   return (
     <div>
       <NotesWindow>
@@ -207,11 +217,12 @@ const App = () => {
                 if (el) notesRef.current[index] = el;
               }}
               date={note.date}
-              // // @ts-expect-error @typescript-eslint/ban-ts-comment   @typescript-eslint/ban-ts-comment  : Content might be undefined
+ 
+              // @ts-expect-error @typescript-eslint/ban-ts-comment
               content={note.content}
               onContentChange={(newContent) =>
-                // // @ts-expect-error @typescript-eslint/ban-ts-comment  : Content might be undefined-error
-
+                // @ts-expect-error @typescript-eslint/ban-ts-comment
+ 
                 handleContentChange(index, newContent)
               }
               onDeleteNote={() => handleDeleteNote(index)}

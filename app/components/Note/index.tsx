@@ -165,7 +165,8 @@ const Note = forwardRef<HTMLDivElement, NoteProps>(
         const textCursorPosition = editor.getTextCursorPosition();
         if (
           !textCursorPosition?.prevBlock &&
-          // // @ts-expect-error @typescript-eslint/ban-ts-comment  : Content might be undefined
+
+          // @ts-expect-error @typescript-eslint/ban-ts-comment
           !(textCursorPosition?.block?.content?.length > 0)
         ) {
           onDeleteNote(index);
@@ -176,67 +177,70 @@ const Note = forwardRef<HTMLDivElement, NoteProps>(
     return (
       <NoteContainer>
         <DateText>{formatDate(date)}</DateText>
-        <BlockNoteView
-          ref={ref}
-          onKeyDown={handleKeyDown}
-          editor={editor}
-          formattingToolbar={false}
-          slashMenu={true}
-          sideMenu={false}
-          onChange={() => {
-            // // @ts-expect-error @typescript-eslint/ban-ts-comment  : Content might be undefined
-            onContentChange(editor.document);
-          }}
-        >
-          <FormattingToolbarController
-            formattingToolbar={() => (
-              <FormattingToolbar>
-                <FileCaptionButton key={"fileCaptionButton"} />
-                <FileReplaceButton key={"replaceFileButton"} />
-                <BasicTextStyleButton
-                  basicTextStyle={"bold"}
-                  key={"boldStyleButton"}
-                />
-                <BasicTextStyleButton
-                  basicTextStyle={"italic"}
-                  key={"italicStyleButton"}
-                />
-                <BasicTextStyleButton
-                  basicTextStyle={"underline"}
-                  key={"underlineStyleButton"}
-                />
-                <BasicTextStyleButton
-                  basicTextStyle={"strike"}
-                  key={"strikeStyleButton"}
-                />
-                <BasicTextStyleButton
-                  key={"codeStyleButton"}
-                  basicTextStyle={"code"}
-                />
-                <TextAlignButton
-                  textAlignment={"left"}
-                  key={"textAlignLeftButton"}
-                />
-                <TextAlignButton
-                  textAlignment={"center"}
-                  key={"textAlignCenterButton"}
-                />
-                <TextAlignButton
-                  textAlignment={"right"}
-                  key={"textAlignRightButton"}
-                />
-                <ColorStyleButton key={"colorStyleButton"} />
-                <CreateLinkButton key={"createLinkButton"} />
-              </FormattingToolbar>
-            )}
-          />
-          <SuggestionMenuController
-            triggerCharacter={"@"}
-            getItems={async (query) =>
-              filterSuggestionItems(getMentionMenuItems(editor), query)
-            }
-          />
-        </BlockNoteView>
+
+        {editor?.document && (
+          <BlockNoteView
+            ref={ref}
+            onKeyDown={handleKeyDown}
+            editor={editor}
+            formattingToolbar={false}
+            slashMenu={true}
+            sideMenu={false}
+            onChange={() => {
+              // @ts-expect-error @typescript-eslint/ban-ts-comment
+              onContentChange(editor?.document);
+            }}
+          >
+            <FormattingToolbarController
+              formattingToolbar={() => (
+                <FormattingToolbar>
+                  <FileCaptionButton key={"fileCaptionButton"} />
+                  <FileReplaceButton key={"replaceFileButton"} />
+                  <BasicTextStyleButton
+                    basicTextStyle={"bold"}
+                    key={"boldStyleButton"}
+                  />
+                  <BasicTextStyleButton
+                    basicTextStyle={"italic"}
+                    key={"italicStyleButton"}
+                  />
+                  <BasicTextStyleButton
+                    basicTextStyle={"underline"}
+                    key={"underlineStyleButton"}
+                  />
+                  <BasicTextStyleButton
+                    basicTextStyle={"strike"}
+                    key={"strikeStyleButton"}
+                  />
+                  <BasicTextStyleButton
+                    key={"codeStyleButton"}
+                    basicTextStyle={"code"}
+                  />
+                  <TextAlignButton
+                    textAlignment={"left"}
+                    key={"textAlignLeftButton"}
+                  />
+                  <TextAlignButton
+                    textAlignment={"center"}
+                    key={"textAlignCenterButton"}
+                  />
+                  <TextAlignButton
+                    textAlignment={"right"}
+                    key={"textAlignRightButton"}
+                  />
+                  <ColorStyleButton key={"colorStyleButton"} />
+                  <CreateLinkButton key={"createLinkButton"} />
+                </FormattingToolbar>
+              )}
+            />
+            <SuggestionMenuController
+              triggerCharacter={"@"}
+              getItems={async (query) =>
+                filterSuggestionItems(getMentionMenuItems(editor), query)
+              }
+            />
+          </BlockNoteView>
+        )}
       </NoteContainer>
     );
   }
