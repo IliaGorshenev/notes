@@ -120,7 +120,7 @@ const App = () => {
             {
               type: "text",
               text: "Tasker",
-             // @ts-expect-error @typescript-eslint/ban-ts-comment
+              // @ts-expect-error @typescript-eslint/ban-ts-comment
               styles: {},
             },
           ],
@@ -139,7 +139,7 @@ const App = () => {
             {
               type: "text",
               text: "First",
-// @ts-expect-error @typescript-eslint/ban-ts-comment
+              // @ts-expect-error @typescript-eslint/ban-ts-comment
               styles: {},
             },
           ],
@@ -158,7 +158,7 @@ const App = () => {
             {
               type: "text",
               text: "Second",
-// @ts-expect-error @typescript-eslint/ban-ts-comment
+              // @ts-expect-error @typescript-eslint/ban-ts-comment
               styles: {},
             },
           ],
@@ -189,13 +189,13 @@ const App = () => {
   const handleNewNote = () => {
     const newNote: Note = {
       date: new Date().toISOString().split("T")[0],
-// @ts-expect-error @typescript-eslint/ban-ts-comment
+      // @ts-expect-error @typescript-eslint/ban-ts-comment
       content: [{ type: "paragraph", content: "" }], // Initialize with an empty array
     };
     const updatedNotes = [...notes, newNote];
     setNotes(updatedNotes);
   };
-// @ts-expect-error @typescript-eslint/ban-ts-comment
+
   const handleDeleteNote = (index: number) => {
     const updatedNotes = [...notes];
     updatedNotes.splice(index, 1); // Remove the note at the given index
@@ -217,12 +217,11 @@ const App = () => {
                 if (el) notesRef.current[index] = el;
               }}
               date={note.date}
- 
               // @ts-expect-error @typescript-eslint/ban-ts-comment
               content={note.content}
               onContentChange={(newContent) =>
                 // @ts-expect-error @typescript-eslint/ban-ts-comment
- 
+
                 handleContentChange(index, newContent)
               }
               onDeleteNote={() => handleDeleteNote(index)}
