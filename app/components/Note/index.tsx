@@ -165,7 +165,7 @@ const Note = forwardRef<HTMLDivElement, NoteProps>(
         const textCursorPosition = editor.getTextCursorPosition();
         if (
           !textCursorPosition?.prevBlock &&
-          // // @ts-expect-error: Content might be undefined
+          // // @ts-expect-error @typescript-eslint/ban-ts-comment  : Content might be undefined
           !(textCursorPosition?.block?.content?.length > 0)
         ) {
           onDeleteNote(index);
@@ -184,7 +184,7 @@ const Note = forwardRef<HTMLDivElement, NoteProps>(
           slashMenu={true}
           sideMenu={false}
           onChange={() => {
-            // // @ts-expect-error: Content might be undefined
+            // // @ts-expect-error @typescript-eslint/ban-ts-comment  : Content might be undefined
             onContentChange(editor.document);
           }}
         >
