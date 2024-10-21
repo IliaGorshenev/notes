@@ -1,3 +1,5 @@
+"use client";
+
 import { createReactInlineContentSpec } from "@blocknote/react";
 
 // The Mention inline content.
