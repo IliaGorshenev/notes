@@ -77,6 +77,7 @@ type Block = {
   content: InlineContent[] | TableContent | undefined;
   children: Block[];
 };
+
 const App = () => {
   const [notes, setNotes] = useState<Note[]>([
     {
@@ -166,6 +167,16 @@ const App = () => {
       ],
     },
   ]);
+
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  if (!isClient) {
+    return null; // Render nothing on the server
+  }
   useEffect(() => {
     console.log("notes", notes);
   }, [notes]);
