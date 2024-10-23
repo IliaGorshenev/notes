@@ -167,6 +167,7 @@ const Note = forwardRef<HTMLTextAreaElement, NoteProps>(
     };
 
     const handleFocus = (e: React.FocusEvent<HTMLTextAreaElement>) => {
+      onFocus();
       resizeTextArea(e.currentTarget);
     };
 

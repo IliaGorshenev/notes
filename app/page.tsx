@@ -254,6 +254,7 @@ const App: React.FC = () => {
       }
     }, 0);
   };
+  console.log(isNoteFocused)
   return (
     <div className={styles.page}>
       <div className={styles.main}>
