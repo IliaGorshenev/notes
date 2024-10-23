@@ -4,6 +4,8 @@ import "@blocknote/mantine/style.css";
 import { useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import Note from "./components/Note";
+import CustomParagraphComponent from "./components/custom";
+import Tiptap from "./components/custom";
 
 const NotesWindow = styled.div`
   display: flex;
@@ -254,6 +256,8 @@ const App = () => {
           </svg>
           Добавить заметку
         </Button>
+        <Tiptap></Tiptap>
+
       </NotesWindow>
     </div>
   );

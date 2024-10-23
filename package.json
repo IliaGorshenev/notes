@@ -12,6 +12,12 @@
     "@blocknote/core": "^0.17.1",
     "@blocknote/mantine": "^0.17.1",
     "@blocknote/react": "^0.17.1",
+    "@tiptap/core": "^2.9.1",
+    "@tiptap/extension-bold": "^2.9.1",
+    "@tiptap/extension-italic": "^2.9.1",
+    "@tiptap/pm": "^2.9.1",
+    "@tiptap/react": "^2.9.1",
+    "@tiptap/starter-kit": "^2.9.1",
     "draft-js": "^0.11.7",
     "jotai": "^2.10.1",
     "next": "14.2.15",
@@ -19,7 +25,8 @@
     "react": "^18",
     "react-dom": "^18",
     "react-quill": "^2.0.0",
-    "styled-components": "^6.1.13"
+    "styled-components": "^6.1.13",
+    "tiptap": "^1.32.2"
   },
   "devDependencies": {
     "@types/node": "^20",
