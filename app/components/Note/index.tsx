@@ -38,6 +38,9 @@ interface NoteProps {
   onDelete: () => void;
   onRemoveCheckbox: () => void;
   onMergeWithPrevious: () => void;
+  onFocus?: () => void;
+  onBlur?: () => void;
+  isNoteFocused: boolean;
 }
 
 const NoteContainer = styled.div`
@@ -73,7 +76,7 @@ const NoteText = styled.textarea<{
   overflow: hidden;
   align-items: center;
   padding: 0;
-  min-height: 10px;
+  min-height: 8px;
   font-size: 14px;
   line-height: 20px;
   border: none;
@@ -100,6 +103,14 @@ const NoteText = styled.textarea<{
     outline: none;
     background-color: ${(props) =>
       props.$showCheckbox ? "#ecf3eb" : "#f1f1f1"};
+  }
+
+  &:not(:focus) {
+    overflow: hidden;
+    max-height: 8px;
+    padding-top: 10px;
+    scroll-padding-top: 0;
+    padding-bottom: 10px;
   }
 `;
 
@@ -130,6 +141,9 @@ const Note = forwardRef<HTMLTextAreaElement, NoteProps>(
       onDelete,
       onRemoveCheckbox,
       onMergeWithPrevious,
+      onFocus,
+      onBlur,
+      isNoteFocused,
     },
     ref
   ) => {
@@ -140,7 +154,7 @@ const Note = forwardRef<HTMLTextAreaElement, NoteProps>(
         e.preventDefault();
         onEnterPress(selectionStart);
       } else if (e.key === "Backspace") {
-        if (text === "") {
+        if (text === "" && !showCheckbox) {
           onDelete();
         } else if (selectionStart === 0) {
           if (showCheckbox) {
@@ -150,6 +164,10 @@ const Note = forwardRef<HTMLTextAreaElement, NoteProps>(
           }
         }
       }
+    };
+
+    const handleFocus = (e: React.FocusEvent<HTMLTextAreaElement>) => {
+      resizeTextArea(e.currentTarget);
     };
 
     const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -163,12 +181,11 @@ const Note = forwardRef<HTMLTextAreaElement, NoteProps>(
       resizeTextArea(e.target);
     };
 
-
-    React.useEffect(() => {
-      if (ref && (ref as React.RefObject<HTMLTextAreaElement>).current) {
-        resizeTextArea((ref as React.RefObject<HTMLTextAreaElement>).current!);
-      }
-    }, [text, ref]);
+    // React.useEffect(() => {
+    //   if (ref && (ref as React.RefObject<HTMLTextAreaElement>).current) {
+    //     resizeTextArea((ref as React.RefObject<HTMLTextAreaElement>).current!);
+    //   }
+    // }, [text, ref, isNoteFocused]);
     return (
       <NoteContainer>
         <DateText>{formatDate(date)}</DateText>
@@ -182,6 +199,8 @@ const Note = forwardRef<HTMLTextAreaElement, NoteProps>(
           $showCheckbox={showCheckbox}
           onChange={handleInputChange}
           onKeyDown={handleKeyDown}
+          onFocus={handleFocus}
+          onBlur={onBlur}
         />
       </NoteContainer>
     );

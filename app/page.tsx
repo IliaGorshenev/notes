@@ -1,6 +1,8 @@
 "use client";
+import { useAtom } from "jotai";
 import React, { useRef, useState } from "react";
 import styled from "styled-components";
+import { currentNoteIndexAtom, notesAtom } from "./atom";
 import Note from "./components/Note";
 import styles from "./page.module.css";
 
@@ -25,13 +27,18 @@ const NotesWindow = styled.div`
   overflow: hidden;
 `;
 
-const MasterButton = styled.button`
+const Checkbox = styled.button<{
+  isSingleNote: boolean;
+  isNoteFocused: boolean;
+}>`
   border: none;
   background-color: transparent;
   cursor: pointer;
   position: absolute;
-  bottom: 2px;
+  bottom: ${(props) =>
+    props.isSingleNote && !props.isNoteFocused ? "20px" : "2px"};
   right: 40px;
+  transition: bottom 0.3s ease-in-out;
 `;
 
 const Button = styled.button`
@@ -53,28 +60,28 @@ const Button = styled.button`
     transition: color 0.2s ease-in-out;
   }
 `;
+const sortNotesByDate = (updatedNotes: any) => {
+  return updatedNotes.sort(
+    (a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime()
+  );
+};
 
 const App: React.FC = () => {
-  const [notes, setNotes] = useState([
-    {
-      date: "2023-10-17",
-      text: "Первая заметка",
-      isStriked: false,
-      showCheckbox: false,
-    },
-  ]);
-  const [currentNoteIndex, setCurrentNoteIndex] = useState<number | null>(null);
+  const [notes, setNotes] = useAtom(notesAtom);
+  const [currentNoteIndex, setCurrentNoteIndex] = useAtom(currentNoteIndexAtom);
+  const [isNoteFocused, setIsNoteFocused] = useState(false);
+
   const notesRef = useRef<HTMLTextAreaElement[]>([]);
+  const dateNow = new Date().toISOString();
+
   const handleButtonClick = () => {
     if (currentNoteIndex !== null) {
-      setNotes((prevNotes) =>
-        prevNotes.map((note, index) =>
-          index === currentNoteIndex
-            ? { ...note, showCheckbox: !note.showCheckbox, isStriked: false }
-            : note
-        )
+      const updatedNotes = notes.map((note, index) =>
+        index === currentNoteIndex
+          ? { ...note, showCheckbox: !note.showCheckbox, isStriked: false }
+          : note
       );
-
+      setNotes(sortNotesByDate(updatedNotes));
       setTimeout(() => {
         if (notesRef.current[currentNoteIndex]) {
           notesRef.current[currentNoteIndex].focus();
@@ -95,8 +102,7 @@ const App: React.FC = () => {
       }
       return note;
     });
-
-    setNotes(updatedNotes);
+    setNotes(sortNotesByDate(updatedNotes));
   };
 
   const handleTextChange = (
@@ -104,68 +110,47 @@ const App: React.FC = () => {
     newText: string,
     selectionStart: number
   ) => {
-    if (newText.includes("\n")) {
-      const textBeforeCursor = newText.substring(0, selectionStart);
-      const textAfterCursor = newText
-        .substring(selectionStart)
-        .replace("\n", "");
-      const newNotes = [
-        ...notes.slice(0, index),
-        { ...notes[index], text: textBeforeCursor },
-        {
-          date: new Date().toISOString().split("T")[0],
-          text: textAfterCursor,
-          isStriked: notes[index].isStriked,
-          showCheckbox: notes[index].showCheckbox,
-        },
-        ...notes.slice(index + 1),
-      ];
-      setNotes(newNotes);
-      setTimeout(() => {
-        if (notesRef.current.length) {
-          notesRef.current[index + 1].focus();
-        }
-      }, 0);
-    } else {
-      setNotes(
-        notes.map((note, i) =>
-          i === index ? { ...note, text: newText } : note
-        )
-      );
-    }
-  };
-
-  const handleCheckboxChange = (index: number) => {
-    setNotes(
-      notes.map((note, i) =>
-        i === index ? { ...note, isStriked: !note.isStriked } : note
-      )
+    const cursorPlace = selectionStart;
+    const updatedNotes = notes.map((note, i) =>
+      i === index ? { ...note, date: dateNow, text: newText } : note
     );
-  };
-  const handleNewNote = () => {
-    setNotes((prevNotes) => [
-      ...prevNotes,
-      {
-        date: new Date().toISOString().split("T")[0],
-        text: "",
-        isStriked: false,
-        showCheckbox: false,
-      },
-    ]);
 
+    setNotes(sortNotesByDate(updatedNotes));
     setTimeout(() => {
-      setCurrentNoteIndex(notes.length);
-      if (notesRef.current[notes.length]) {
-        notesRef.current[notes.length].focus();
+      setCurrentNoteIndex(notes.length - 1);
+      if (notesRef.current[notes.length - 1]) {
+        console.log(notes.length);
+
+        notesRef.current[notes.length - 1].focus();
+        notesRef.current[notes.length - 1].setSelectionRange(
+          cursorPlace,
+          cursorPlace
+        );
       }
     }, 0);
   };
 
-  const resizeTextArea = (element: HTMLTextAreaElement) => {
-    element.style.height = "auto";
-    if (element.scrollHeight > element.clientHeight) {
-      element.style.height = `${element.scrollHeight}px`;
-    }
+  const handleCheckboxChange = (index: number) => {
+    const updatedNotes = notes.map((note, i) =>
+      i === index ? { ...note, isStriked: !note.isStriked } : note
+    );
+    setNotes(sortNotesByDate(updatedNotes));
+  };
+
+  const handleNewNote = () => {
+    const newNote = {
+      date: new Date().toISOString(),
+      text: "",
+      isStriked: false,
+      showCheckbox: false,
+    };
+    const updatedNotes = [...notes, newNote];
+    setNotes(sortNotesByDate(updatedNotes));
+    setTimeout(() => {
+      if (notesRef.current[notes.length]) {
+        notesRef.current[notes.length].focus();
+      }
+    }, 0);
   };
 
   const handleEnterPress = (position: number) => {
@@ -173,43 +158,38 @@ const App: React.FC = () => {
       const currentNote = notes[currentNoteIndex];
       const textBefore = currentNote?.text?.slice(0, position) || "";
       const textAfter = currentNote?.text?.slice(position) || "";
-
       const emptyTaskChecker =
         position === 0 &&
         currentNote.showCheckbox === true &&
         !(currentNote.text.length > 0);
-
       if (emptyTaskChecker) {
-        setNotes((prevNotes) =>
-          prevNotes.map((note, index) =>
-            index === currentNoteIndex ? { ...note, showCheckbox: false } : note
-          )
+        const updatedNotes = notes.map((note, index) =>
+          index === currentNoteIndex
+            ? { ...note, date: dateNow, showCheckbox: false }
+            : note
         );
+        setNotes(sortNotesByDate(updatedNotes));
       } else {
         const newNote = {
-          date: new Date().toISOString().split("T")[0],
+          date: dateNow,
           text: textAfter,
           isStriked: false,
           showCheckbox: currentNote?.showCheckbox || false,
         };
-
-        setNotes((prevNotes) => {
-          const updatedNotes = [
-            ...prevNotes.slice(0, currentNoteIndex + 1),
-            newNote,
-            ...prevNotes.slice(currentNoteIndex + 1),
-          ];
-          return updatedNotes.map((note, index) =>
-            index === currentNoteIndex ? { ...note, text: textBefore } : note
-          );
-        });
-
+        const updatedNotes = [
+          ...notes.slice(0, currentNoteIndex + 1),
+          newNote,
+          ...notes.slice(currentNoteIndex + 1),
+        ].map((note, index) =>
+          index === currentNoteIndex ? { ...note, text: textBefore } : note
+        );
+        setNotes(sortNotesByDate(updatedNotes));
         setTimeout(() => {
-          if (notesRef.current[currentNoteIndex + 1]) {
-            notesRef.current[currentNoteIndex + 1].focus();
-            notesRef.current[currentNoteIndex + 1].setSelectionRange(0, 0);
-            setCurrentNoteIndex(currentNoteIndex + 1);
-            resizeTextArea(notesRef.current[currentNoteIndex + 1]);
+          if (notesRef.current[notes.length]) {
+            notesRef.current[notes.length].focus();
+            notesRef.current[notes.length].setSelectionRange(0, 0);
+            setCurrentNoteIndex(notes.length);
+            resizeTextArea(notesRef.current[notes.length]);
           }
         }, 0);
         setTimeout(() => {
@@ -220,24 +200,26 @@ const App: React.FC = () => {
       }
     }
   };
-
   const handleRemoveCheckbox = (index: number) => {
-    setNotes(
-      notes.map((note, i) =>
-        i === index ? { ...note, showCheckbox: false } : note
-      )
+    const newNotes = notes.map((note, i) =>
+      i === index ? { ...note, showCheckbox: false } : note
     );
+
+    setNotes(sortNotesByDate(newNotes));
   };
 
   const handleMergeWithPrevious = (index: number) => {
     const prevNoteText = notes[index > 0 ? index - 1 : 0].text.length;
-
     if (index > 0) {
       const newText = notes[index - 1].text + notes[index].text;
       const newNotes = notes
         .map((note, i) => {
           if (i === index - 1) {
-            return { ...note, text: newText };
+            return {
+              ...note,
+              date: new Date().toISOString().split("T")[0],
+              text: newText,
+            };
           }
           return note;
         })
@@ -257,18 +239,21 @@ const App: React.FC = () => {
   };
 
   const handleDelete = (index: number) => {
+    const prevNoteText = notes[index > 0 ? index - 1 : 0].text.length;
     const newNotes = notes.filter((_, i) => i !== index);
-    setNotes(newNotes);
-
+    setNotes(sortNotesByDate(newNotes));
     const prevIndex = index > 0 ? index - 1 : 0;
     setTimeout(() => {
       setCurrentNoteIndex(prevIndex);
       if (notesRef.current[prevIndex]) {
         notesRef.current[prevIndex].focus();
+        notesRef.current[prevIndex].setSelectionRange(
+          prevNoteText,
+          prevNoteText
+        );
       }
     }, 0);
   };
-
   return (
     <div className={styles.page}>
       <div className={styles.main}>
@@ -279,6 +264,9 @@ const App: React.FC = () => {
                 ref={(el) => {
                   if (el) notesRef.current[index] = el;
                 }}
+                onFocus={() => setIsNoteFocused(true)}
+                isNoteFocused={isNoteFocused}
+                onBlur={() => setIsNoteFocused(false)}
                 date={note.date}
                 text={note.text}
                 isStriked={note.isStriked}
@@ -322,7 +310,11 @@ const App: React.FC = () => {
               Добавить заметку
             </Button>
           )}
-          <MasterButton onClick={handleButtonClick}>
+          <Checkbox
+            isSingleNote={notes.length === 1}
+            isNoteFocused={isNoteFocused}
+            onClick={handleButtonClick}
+          >
             <svg
               width="14"
               height="14"
@@ -345,7 +337,7 @@ const App: React.FC = () => {
                 strokeLinejoin="round"
               />
             </svg>
-          </MasterButton>
+          </Checkbox>
         </NotesWindow>
       </div>
     </div>

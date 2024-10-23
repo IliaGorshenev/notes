@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "framework7-react": "^8.3.4",
     "jotai": "^2.10.1",
     "next": "14.2.15",
     "react": "^18",
