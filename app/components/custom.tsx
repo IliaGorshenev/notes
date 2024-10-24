@@ -1,203 +1,110 @@
-import {
-  Editor,
-  Node,
-  NodeViewProps,
-  mergeAttributes,
-  nodeInputRule,
-} from "@tiptap/core";
-import { ReactNodeViewRenderer } from "@tiptap/react";
-import { useEffect, useState } from "react";
+import Document from "@tiptap/extension-document";
+import Paragraph from "@tiptap/extension-paragraph";
+import Text from "@tiptap/extension-text";
+import { EditorContent, useEditor } from "@tiptap/react";
 
-export const CustomParagraph = Node.create({
-  name: "customParagraph",
+const CustomParagraph = Paragraph.extend({
+  // onUpdate({ name }) {
+  //   // attributes.date = new Date().toISOString().split("T");
+  //   console.log(name);
+  // },
+  // onUpdate({ node, HTMLAttributes }) {
+  //   console.log(node);
 
-  addOptions() {
-    return {
-      HTMLAttributes: {},
-    };
-  },
-
+  //   if (node && node.attrs) {
+  //     // Ensure node and node.attrs exist
+  //     const currentDate = new Date().toISOString().split("T")[0];
+  //     node.attrs.date = currentDate;
+  //     HTMLAttributes["data-date"] = currentDate;
+  //     console.log(`Updated date: ${currentDate}`);
+  //   } else {
+  //     console.error("Node or its attributes are undefined");
+  //   }
+  // },
   addAttributes() {
+    // Return an object with attribute configuration
     return {
-      creationDate: {
-        default: new Date().toISOString(),
-      },
-      checked: {
-        default: false,
+      date: {
+        default: new Date().toISOString().split("T"),
+        renderHTML: (attributes) => {
+          return {
+            "data-date": new Date().toISOString().split("T"),
+            "data-date-from-scope": attributes.date,
+            style: `color: #1100ff`,
+          };
+        },
       },
     };
-  },
-
-  parseHTML() {
-    return [
-      {
-        tag: "p",
-      },
-    ];
   },
 
   renderHTML({ node, HTMLAttributes }) {
-    const isCheckbox = node.textContent.startsWith("[]");
     return [
-      "div",
-      { style: "display: flex; align-items: center;" },
-      [
-        "input",
-        {
-          type: "date",
-          value: node.attrs.creationDate,
-          style: "margin-right: 8px;",
-        },
-      ],
-      isCheckbox
-        ? [
-            "input",
-            {
-              type: "checkbox",
-              checked: node.attrs.checked,
-              style: "margin-right: 8px;",
-            },
-          ]
-        : "",
-      [
-        "p",
-        mergeAttributes(this.options.HTMLAttributes, HTMLAttributes),
-        isCheckbox ? node.textContent.slice(3) : node.textContent,
-      ],
+      "span",
+      {
+        ...HTMLAttributes,
+        "data-type": "custom-paragraph",
+      },
+      ["span", `${node.attrs.date}`],
+      ["div", 0],
     ];
   },
 
-  addNodeView() {
-    return ReactNodeViewRenderer(CustomParagraphComponent);
-  },
+  // addNodeView() {
+  //   return () => {
+  //     const container = document.createElement("div");
 
-  addInputRules() {
-    return [
-      nodeInputRule({
-        find: /\n$/,
-        type: this.type,
-        getAttributes: () => ({
-          creationDate: new Date().toISOString(),
-        }),
-      }),
-    ];
-  },
+  //     container.addEventListener("click", (event) => {
+  //       alert("clicked on the container");
+  //     });
+
+  //     const content = document.createElement("div");
+  //     container.append(content);
+
+  //     return {
+  //       dom: container,
+  //       contentDOM: content,
+  //     };
+  //   };
+  // },
 });
 
-const CustomParagraphComponent = (props: NodeViewProps) => {
-  const { node, updateAttributes } = props;
-  const [date, setDate] = useState(node.attrs.creationDate);
-  const isCheckbox = node.textContent.startsWith("[]");
-  const [checked, setChecked] = useState(node.attrs.checked);
-
-  useEffect(() => {
-    const newDate = new Date().toISOString();
-    setDate(newDate);
-    updateAttributes({ creationDate: newDate });
-  }, [node.textContent]);
-
-  const handleDateChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setDate(event.target.value);
-    updateAttributes({ creationDate: event.target.value });
-  };
-
-  const handleCheckboxChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setChecked(event.target.checked);
-    updateAttributes({ checked: event.target.checked });
-  };
-
-  return (
-    <div style={{ display: "flex", alignItems: "center" }}>
-      <span style={{ marginRight: "8px" }}>{`Date: ${date}`}</span>
-      <input
-        type="date"
-        value={date}
-        onChange={handleDateChange}
-        style={{ marginRight: "8px" }}
-      />
-      {isCheckbox && (
-        <input
-          type="checkbox"
-          checked={checked}
-          onChange={handleCheckboxChange}
-          style={{ marginRight: "8px" }}
-        />
-      )}
-      <p>{isCheckbox ? node.textContent.slice(3) : node.textContent}</p>
-    </div>
-  );
-};
-
-// Initialize Editor
-import Bold from "@tiptap/extension-bold";
-import Heading from "@tiptap/extension-heading";
-import Italic from "@tiptap/extension-italic";
-import { BubbleMenu, EditorContent, FloatingMenu } from "@tiptap/react";
-import StarterKit from "@tiptap/starter-kit";
-
 const Tiptap = () => {
-  const editor = new Editor({
+  const editor = useEditor({
     extensions: [
-      StarterKit,
-      Bold,
-      Italic,
-      Heading,
+      Document,
+      Paragraph,
+      Text,
+      // configure({
+      //   HTMLAttributes: {
+      //     date: new Date().toISOString(),
+      //   },
+      // }),
+      // Paragraph.configure({
+      //   HTMLAttributes: {
+      //     date: update,
+      //   },
+      // }),
+      // Text.configure({
+      //   HTMLAttributes: {
+      //     date: update,
+      //   },
+      // }),
       CustomParagraph,
-      // other extensions
     ],
+
+    content: `
+        <p>Text</p>
+        
+      `,
   });
+
+  if (!editor) {
+    return null;
+  }
 
   return (
     <>
       <EditorContent editor={editor} />
-      <BubbleMenu editor={editor} tippyOptions={{ duration: 100 }}>
-        <button
-          onClick={() => editor.chain().focus().toggleBold().run()}
-          disabled={!editor.can().chain().focus().toggleBold().run()}
-        >
-          Bold
-        </button>
-        <button
-          onClick={() => editor.chain().focus().toggleItalic().run()}
-          disabled={!editor.can().chain().focus().toggleItalic().run()}
-        >
-          Italic
-        </button>
-        <button
-          onClick={() =>
-            editor.chain().focus().toggleHeading({ level: 1 }).run()
-          }
-          disabled={
-            !editor.can().chain().focus().toggleHeading({ level: 1 }).run()
-          }
-        >
-          H1
-        </button>
-        <button
-          onClick={() =>
-            editor.chain().focus().toggleHeading({ level: 2 }).run()
-          }
-          disabled={
-            !editor.can().chain().focus().toggleHeading({ level: 2 }).run()
-          }
-        >
-          H2
-        </button>
-        <button
-          onClick={() =>
-            editor.chain().focus().toggleHeading({ level: 3 }).run()
-          }
-          disabled={
-            !editor.can().chain().focus().toggleHeading({ level: 3 }).run()
-          }
-        >
-          H3
-        </button>
-      </BubbleMenu>
-      <FloatingMenu editor={editor}>
-        <button onClick={() => editor.commands.toggleBold()}>Bold</button>
-        <button onClick={() => editor.commands.toggleItalic()}>Italic</button>
-      </FloatingMenu>
     </>
   );
 };
