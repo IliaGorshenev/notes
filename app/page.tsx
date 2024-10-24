@@ -3,8 +3,7 @@ import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
 import { useEffect, useRef, useState } from "react";
 import styled from "styled-components";
-import Note from "./components/Note";
-import CustomParagraphComponent from "./components/custom";
+// import Note from "./components/Note";
 import Tiptap from "./components/custom";
 
 const NotesWindow = styled.div`
@@ -214,7 +213,7 @@ const App = () => {
       <NotesWindow>
         {notes.map((note, index) => (
           <div key={index}>
-            <Note
+            {/* <Note
               key={index} // Ensure unique key for each note
               ref={(el) => {
                 if (el) notesRef.current[index] = el;
@@ -228,7 +227,7 @@ const App = () => {
                 handleContentChange(index, newContent)
               }
               onDeleteNote={() => handleDeleteNote(index)}
-            />
+            /> */}
           </div>
         ))}
         <Button onClick={handleNewNote}>
@@ -257,7 +256,6 @@ const App = () => {
           Добавить заметку
         </Button>
         <Tiptap></Tiptap>
-
       </NotesWindow>
     </div>
   );

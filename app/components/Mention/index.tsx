@@ -1,23 +1,23 @@
-"use client";
+// "use client";
 
-import { createReactInlineContentSpec } from "@blocknote/react";
+// import { createReactInlineContentSpec } from "@blocknote/react";
 
-// The Mention inline content.
-export const Mention = createReactInlineContentSpec(
-  {
-    type: "mention",
-    propSchema: {
-      user: {
-        default: "Unknown",
-      },
-    },
-    content: "none",
-  },
-  {
-    render: (props) => (
-      <span style={{ backgroundColor: "#73b9a1" }}>
-        @{props.inlineContent.props.user}
-      </span>
-    ),
-  }
-);
+// // The Mention inline content.
+// export const Mention = createReactInlineContentSpec(
+//   {
+//     type: "mention",
+//     propSchema: {
+//       user: {
+//         default: "Unknown",
+//       },
+//     },
+//     content: "none",
+//   },
+//   {
+//     render: (props) => (
+//       <span style={{ backgroundColor: "#73b9a1" }}>
+//         @{props.inlineContent.props.user}
+//       </span>
+//     ),
+//   }
+// );
