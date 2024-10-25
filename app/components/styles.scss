@@ -83,7 +83,6 @@
     &:hover,
     &:hover.is-selected {
       background-color: #d6d6d6;
-      
     }
 
     &.is-selected {
@@ -111,7 +110,37 @@
       background-color: unset;
       background-color: #90ddc1;
       color: #0d4a36;
+    }
 
+    &.is-active {
+      color: #0d4a36;
+      background-color: #beeada;
+      &:hover {
+        background-color: #90ddc1;
+      }
+    }
+  }
+}
+
+.floating-menu {
+  background-color: #fff;
+  border: 1px solid #bbbbbb;
+  border-radius: 8px;
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+  display: flex;
+  padding: 6px;
+
+  button {
+    background-color: unset;
+    border: #156a4c;
+    border-radius: 8px;
+    cursor: pointer;
+    padding: 8px;
+
+    &:hover {
+      background-color: unset;
+      background-color: #90ddc1;
+      color: #0d4a36;
     }
 
     &.is-active {

@@ -5,10 +5,15 @@ import Mention from "@tiptap/extension-mention";
 import TaskItem from "@tiptap/extension-task-item";
 import TaskList from "@tiptap/extension-task-list";
 import TextStyle from "@tiptap/extension-text-style";
-import { BubbleMenu, EditorContent, useEditor } from "@tiptap/react";
+import {
+  BubbleMenu,
+  EditorContent,
+  FloatingMenu,
+  useEditor,
+} from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { atom, useAtom } from "jotai";
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import "./components/styles.scss";
 import suggestion from "./components/suggestions";
@@ -192,11 +197,11 @@ const DateText = styled.span`
   z-index: 10;
 `;
 
-// const findLatestNote = (notes: { date: string; content: string }[]) => {
-//   return notes.reduce((latest, note) => {
-//     return new Date(note.date) > new Date(latest.date) ? note : latest;
-//   }, notes[0]);
-// };
+const findLatestNote = (notes: { date: string; content: string }[]) => {
+  return notes.reduce((latest, note) => {
+    return new Date(note.date) > new Date(latest.date) ? note : latest;
+  }, notes[0]);
+};
 const App = () => {
   const [{ users, activeUserId }, setUsersNotes] = useAtom(usersNotesAtom);
   // const findLatestNote = (notes) => {
@@ -229,7 +234,11 @@ const App = () => {
   };
   const handleClickOutside = (event: MouseEvent) => {
     const target = event.target as HTMLElement | null;
-    if (target && !target.closest(".notes-window")) {
+    if (
+      target &&
+      !target.closest(".notes-window") &&
+      !target.closest(".dropdown-menu")
+    ) {
       setUsersNotes((prev) => ({ ...prev, activeUserId: null }));
     }
   };
@@ -255,6 +264,7 @@ const App = () => {
   };
 
   const handleDeleteNote = (userId: string, index: number) => {
+    console.log(userId, index, "deleted");
     const updatedUsersNotes = users.map((user) =>
       user.userId === userId
         ? { ...user, notes: user.notes.filter((_, i) => i !== index) }
@@ -270,8 +280,9 @@ const App = () => {
   return (
     <>
       {users.map(({ userId, notes }) => {
-        // const latestNote = findLatestNote(notes);
-        const displayedNotes = notes;
+        const latestNote = findLatestNote(notes);
+
+        const displayedNotes = activeUserId === userId ? notes : [latestNote];
         const allNotes = notes;
         return (
           <NoteWindow
@@ -328,6 +339,7 @@ const NoteWindow = ({
   activeUserId,
 }: NoteWindowProps) => {
   const notesRef = useRef<NoteEditorRef[]>([]);
+  const [updateKey, setUpdateKey] = useState(0);
 
   const handleSetActiveUser = (userId: string) => {
     setActiveUser(userId);
@@ -371,8 +383,10 @@ const NoteWindow = ({
       }
     }
   };
+
   const handleDeleting = (index: number) => {
     onDeleteNote(userId, index);
+    setUpdateKey(updateKey + 1); // Trigger re-render
     if (index > 0) {
       setTimeout(() => {
         if (notesRef.current[index - 1]) {
@@ -396,7 +410,7 @@ const NoteWindow = ({
       >
         {notes.map((note, index) => (
           <Note
-            key={index}
+            key={`${note.date}-${updateKey}`}
             index={index}
             date={note.date}
             content={note.content}
@@ -435,7 +449,7 @@ const Note = ({
     extensions: [
       StarterKit.configure({
         heading: {
-          levels: [1, 2],
+          levels: [1, 2, 3],
         },
       }),
       TaskList,
@@ -586,7 +600,60 @@ const Note = ({
           }
           onDeleteNote={() => handleDeleteNote(index)}
         /> */}
-
+        {editor && (
+          <FloatingMenu editor={editor} tippyOptions={{ duration: 100 }}>
+            <div className="floating-menu">
+              <button
+                onClick={() =>
+                  editor.chain().focus().toggleHeading({ level: 1 }).run()
+                }
+                className={
+                  editor.isActive("heading", { level: 1 }) ? "is-active" : ""
+                }
+              >
+                H1
+              </button>
+              <button
+                onClick={() =>
+                  editor.chain().focus().toggleHeading({ level: 2 }).run()
+                }
+                className={
+                  editor.isActive("heading", { level: 2 }) ? "is-active" : ""
+                }
+              >
+                H2
+              </button>
+              <button
+                onClick={() =>
+                  editor.chain().focus().toggleHeading({ level: 3 }).run()
+                }
+                className={
+                  editor.isActive("heading", { level: 3 }) ? "is-active" : ""
+                }
+              >
+                H2
+              </button>
+              <button
+                onClick={() => editor.chain().focus().toggleBulletList().run()}
+                className={editor.isActive("bulletList") ? "is-active" : ""}
+              >
+                Bullet list
+              </button>
+              <button
+                onClick={() => editor.chain().focus().insertContent("@").run()}
+                className={editor.isActive("mention") ? "is-active" : ""}
+              >
+                Mention
+              </button>
+              <button
+                onClick={() => editor.chain().focus().toggleTaskList().run()}
+                className={editor.isActive("taskItem") ? "is-active" : ""}
+              >
+                Checkbox
+              </button>
+            </div>
+          </FloatingMenu>
+        )}
         {editor && (
           <BubbleMenu editor={editor} tippyOptions={{ duration: 100 }}>
             <div className="bubble-menu">
