@@ -1,28 +1,156 @@
 "use client";
-import "@blocknote/core/fonts/inter.css";
-import "@blocknote/mantine/style.css";
-import { useEffect, useRef, useState } from "react";
+import Color from "@tiptap/extension-color";
+import Link from "@tiptap/extension-link";
+import Mention from "@tiptap/extension-mention";
+import TaskItem from "@tiptap/extension-task-item";
+import TaskList from "@tiptap/extension-task-list";
+import TextStyle from "@tiptap/extension-text-style";
+import { BubbleMenu, EditorContent, useEditor } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
+import { atom, useAtom } from "jotai";
+import { useCallback, useEffect, useRef } from "react";
 import styled from "styled-components";
-import Note from "./components/Note";
+import "./components/styles.scss";
+import suggestion from "./components/suggestions";
+const initialUsersNotes = [
+  {
+    userId: "user1",
+    notes: [
+      {
+        date: "2024-10-10",
+        content: "<p>Это первая заметка пользователя 1.</p>",
+      },
+      {
+        date: "2024-08-10",
+        content:
+          "<p>Это вторая заметка пользователя 1. Добавим немного деталей.</p>",
+      },
+      {
+        date: "2024-06-20",
+        content:
+          "<p>Третья заметка пользователя 1 с дополнительной информацией.</p>",
+      },
+      {
+        date: "2024-05-15",
+        content:
+          "<ul><li>Заметка 4. Пункт 1</li><li>Заметка 4. Пункт 2</li></ul>",
+      },
+    ],
+  },
+  {
+    userId: "user2",
+    notes: [
+      {
+        date: "2024-09-10",
+        content:
+          "<p>Много текст Много текст Много текст Много текст Много текст Много текст Много текст Много текст Много текст Много текст Много текст Много текст Много текст Много текст Много текст Много текст Много текст Много текст Много текст Много текст Много текст Много текст Много текст Много текст Много текст Много текст Много текст </p>",
+      },
+      {
+        date: "2024-07-10",
+        content: "<p>Это вторая заметка пользователя 2.</p>",
+      },
+      {
+        date: "2024-06-18",
+        content: "<ul><li>Пункт 1</li><li>Пункт 2</li><li>Пункт 3</li></ul>",
+      },
+      {
+        date: "2024-05-22",
+        content:
+          "<p>Четвертая заметка пользователя 2 с рандомными мыслями.</p>",
+      },
+    ],
+  },
+  {
+    userId: "user3",
+    notes: [
+      {
+        date: "2024-11-01",
+        content:
+          "<p>Первая заметка пользователя 3. Очень интересный текст.</p>",
+      },
+      {
+        date: "2024-10-20",
+        content: "<p>Вторая заметка пользователя 3 с различными идеями.</p>",
+      },
+      {
+        date: "2024-09-05",
+        content:
+          "<p>Очень длинная и подробная заметка пользователя 3, заполненная множеством инсайтов, мыслей и анализов различных тем. Эта заметка продолжается и продолжается, предоставляя огромное количество информации и ценных данных для всех, кто ее прочитает. Поистине впечатляющая работа.</p>",
+      },
+      {
+        date: "2024-08-25",
+        content: "<p>Еще одна заметка пользователя 3 с размышлениями.</p>",
+      },
+    ],
+  },
+  {
+    userId: "user4",
+    notes: [
+      {
+        date: "2024-12-01",
+        content: "<p>Первая заметка пользователя 4. Краткая, но сильная.</p>",
+      },
+      {
+        date: "2024-11-15",
+        content:
+          "<p>Вторая заметка пользователя 4 с несколькими интересными пунктами.</p>",
+      },
+      {
+        date: "2024-10-30",
+        content:
+          "<ul><li>Очень подробная заметка</li><li>Много важных тем</li><li>Много информации</li></ul>",
+      },
+      {
+        date: "2024-09-20",
+        content:
+          "<p>Последняя заметка пользователя 4 с заключительными мыслями.</p>",
+      },
+    ],
+  },
+];
 
-const NotesWindow = styled.div`
+const usersNotesAtom = atom<{
+  users: { userId: string; notes: { date: string; content: string }[] }[];
+  activeUserId: string | null;
+}>({
+  users: initialUsersNotes,
+  activeUserId: null,
+});
+
+interface NotesWindowProps {
+  $isActive: boolean | null;
+}
+
+const NotesWindow = styled.div<NotesWindowProps>`
   display: flex;
   flex-direction: column;
   row-gap: 3px;
   position: relative;
   border: none;
-  background-color: #fff;
+  background-color: ${({ $isActive }) => ($isActive ? "#f5f5f5" : "#fff")};
   border-radius: 4px;
-  padding: 24px;
+  padding: 18px;
   width: 450px;
   margin: 0 auto;
-  margin-top: 70px;
-  box-sizing: border-box;
+  border: 1px solid #e6e6e6;
+  box-sizing: content-box;
+  max-height: ${({ $isActive }) => ($isActive ? "none" : "30px")};
+  overflow: ${({ $isActive }) => ($isActive ? "visible" : "hidden")};
+  transition: max-height 0.5s ease-in-out;
+
+  > :first-child {
+    max-height: ${({ $isActive }) => ($isActive ? "none" : "24px")};
+    overflow: ${({ $isActive }) => ($isActive ? "visible" : "hidden")};
+  }
+
+  > :not(:first-child) {
+    display: ${({ $isActive }) => ($isActive ? "block" : "none")};
+  }
 `;
 
 const Button = styled.button`
   border: none;
-  background-color: #fff;
+  background-color: transparent;
   color: #73b9a1;
   cursor: pointer;
   margin: auto;
@@ -38,225 +166,437 @@ const Button = styled.button`
     transition: color 0.2s ease-in-out;
   }
 `;
-type Note = {
-  date: string;
-  content: Block[];
-};
 
-type Link = {
-  type: "link";
-  content: StyledText[];
-  href: string;
-};
-type Styles = {
-  bold: boolean;
-  italic: boolean;
-  underline: boolean;
-  strikethrough: boolean;
-  textColor: string;
-  backgroundColor: string;
-};
+const NoteContainer = styled.div`
+  margin: 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  border-radius: 4px;
+  column-gap: 10px;
+  position: relative;
+  max-width: 100%;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  padding-left: 42px;
+`;
 
-type StyledText = {
-  type: "text";
-  text: string;
-  styles: Styles;
-};
-
-type InlineContent = Link | StyledText;
-type TableContent = {
-  type: "tableContent";
-  rows: {
-    cells: InlineContent[][];
-  }[];
-};
-type Block = {
-  id: string;
-  type: string;
-  props: Record<string, boolean | number | string>;
-  content: InlineContent[] | TableContent | undefined;
-  children: Block[];
-};
+const DateText = styled.span`
+  color: #000000;
+  font-size: 12px;
+  line-height: 16px;
+  margin-top: 3px;
+  white-space: nowrap;
+  position: absolute;
+  top: 2px;
+  left: 0;
+  z-index: 10;
+`;
 
 const App = () => {
-  const [notes, setNotes] = useState<Note[]>([
-    {
-      date: "2023-10-18",
-      content: [
-        {
-          id: "df0ef63a-6139-48dd-9075-8bfad7ec8ca6",
-          type: "paragraph",
-          props: {
-            textColor: "default",
-            backgroundColor: "default",
-            textAlignment: "left",
-          },
-          content: [
-            {
-              type: "text",
-              text: "Сохраненная заметка",
+  const [{ users, activeUserId }, setUsersNotes] = useAtom(usersNotesAtom);
 
-              // @ts-expect-error @typescript-eslint/ban-ts-comment
-              styles: {},
-            },
-          ],
-          children: [],
-        },
-      ],
-    },
-    {
-      date: "2023-10-18",
-      content: [
-        {
-          id: "eac65698-34b0-44de-9887-2d1962d2ccbf",
-          type: "heading",
-          props: {
-            textColor: "default",
-            backgroundColor: "default",
-            textAlignment: "left",
-            level: 3,
-          },
-          content: [
-            {
-              type: "text",
-              text: "Tasker",
-              // @ts-expect-error @typescript-eslint/ban-ts-comment
-              styles: {},
-            },
-          ],
-          children: [],
-        },
-        {
-          id: "b7a2e9d9-89e2-4351-90a1-b0b30c307db5",
-          type: "checkListItem",
-          props: {
-            textColor: "default",
-            backgroundColor: "default",
-            textAlignment: "left",
-            checked: false,
-          },
-          content: [
-            {
-              type: "text",
-              text: "First",
-              // @ts-expect-error @typescript-eslint/ban-ts-comment
-              styles: {},
-            },
-          ],
-          children: [],
-        },
-        {
-          id: "a28384ae-46f0-43d3-a476-5332f86a9bb2",
-          type: "checkListItem",
-          props: {
-            textColor: "default",
-            backgroundColor: "default",
-            textAlignment: "left",
-            checked: false,
-          },
-          content: [
-            {
-              type: "text",
-              text: "Second",
-              // @ts-expect-error @typescript-eslint/ban-ts-comment
-              styles: {},
-            },
-          ],
-          children: [],
-        },
-      ],
-    },
-  ]);
-
-  const [isClient, setIsClient] = useState(false);
+  const handleContentChange = (
+    userId: string,
+    index: number,
+    newContent: string
+  ) => {
+    const updatedUsersNotes = users.map((user) =>
+      user.userId === userId
+        ? {
+            ...user,
+            notes: user.notes.map((note, i) =>
+              i === index
+                ? {
+                    ...note,
+                    content: newContent,
+                    date: new Date().toISOString().split("T")[0],
+                  }
+                : note
+            ),
+          }
+        : user
+    );
+    setUsersNotes({ users: updatedUsersNotes, activeUserId });
+  };
+  const handleClickOutside = (event: MouseEvent) => {
+    const target = event.target as HTMLElement | null;
+    if (target && !target.closest(".notes-window")) {
+      setUsersNotes((prev) => ({ ...prev, activeUserId: null }));
+    }
+  };
 
   useEffect(() => {
-    setIsClient(true);
+    document.addEventListener("click", handleClickOutside);
+    return () => {
+      document.removeEventListener("click", handleClickOutside);
+    };
   }, []);
 
-  useEffect(() => {
-    console.log("notes", notes);
-  }, [notes]);
-  // const [currentNoteIndex, setCurrentNoteIndex] = useState<number | null>(null);
-  const notesRef = useRef<HTMLDivElement[]>([]);
-
-  const handleContentChange = (index: number, newContent: Block[]) => {
-    console.log("sdafsadf", [newContent]);
-    const updatedNotes = notes.map((note, i) =>
-      i === index ? { ...note, content: newContent } : note
-    );
-    setNotes(updatedNotes);
-  };
-  const handleNewNote = () => {
-    const newNote: Note = {
+  const handleNewNote = (userId: string) => {
+    const newNote = {
       date: new Date().toISOString().split("T")[0],
-      // @ts-expect-error @typescript-eslint/ban-ts-comment
-      content: [{ type: "paragraph", content: "" }], // Initialize with an empty array
+      content: "",
     };
-    const updatedNotes = [...notes, newNote];
-    setNotes(updatedNotes);
+    const updatedUsersNotes = users.map((user) =>
+      user.userId === userId
+        ? { ...user, notes: [...user.notes, newNote] }
+        : user
+    );
+    setUsersNotes({ users: updatedUsersNotes, activeUserId });
   };
 
-  const handleDeleteNote = (index: number) => {
-    const updatedNotes = [...notes];
-    updatedNotes.splice(index, 1); // Remove the note at the given index
-    setNotes(updatedNotes);
-    console.log(updatedNotes);
+  const handleDeleteNote = (userId: string, index: number) => {
+    const updatedUsersNotes = users.map((user) =>
+      user.userId === userId
+        ? { ...user, notes: user.notes.filter((_, i) => i !== index) }
+        : user
+    );
+    setUsersNotes({ users: updatedUsersNotes, activeUserId });
   };
 
-  if (!isClient) {
-    return null; // Render nothing on the server
+  const handleSetActiveUser = (userId: string) => {
+    setUsersNotes((prev) => ({ ...prev, activeUserId: userId }));
+  };
+  return (
+    <>
+      {users.map(({ userId, notes }) => (
+        <NoteWindow
+          key={userId}
+          userId={userId}
+          activeUserId={activeUserId}
+          notes={notes}
+          onContentChange={handleContentChange}
+          onNewNote={handleNewNote}
+          onDeleteNote={handleDeleteNote}
+          setActiveUser={handleSetActiveUser}
+        />
+      ))}
+    </>
+  );
+};
+
+interface NoteWindowProps {
+  userId: string;
+  notes: { date: string; content: string }[];
+  onContentChange: (userId: string, index: number, newContent: string) => void;
+  onNewNote: (userId: string) => void;
+  onDeleteNote: (userId: string, index: number) => void;
+  setActiveUser: (userId: string) => void;
+  activeUserId: string | null;
+}
+interface NoteEditorRef {
+  editor: {
+    commands: {
+      focus: () => void;
+      setTextSelection: (position: number) => void;
+    };
+    state: {
+      doc: {
+        content: {
+          size: number;
+        };
+      };
+    };
+    isEmpty: boolean;
+  };
+}
+const NoteWindow = ({
+  userId,
+  notes,
+  onContentChange,
+  onNewNote,
+  onDeleteNote,
+  setActiveUser,
+  activeUserId,
+}: NoteWindowProps) => {
+  const notesRef = useRef<NoteEditorRef[]>([]);
+
+  const handleKeyDown = (index: number, event: KeyboardEvent) => {
+    if (event.key === "Backspace" && notesRef.current[index]?.editor?.isEmpty) {
+      onDeleteNote(userId, index);
+
+      if (index > 0) {
+        setTimeout(() => {
+          if (notesRef.current[index - 1]) {
+            notesRef.current[index - 1]?.editor.commands.focus();
+            notesRef.current[index - 1]?.editor.commands.setTextSelection(
+              notesRef.current[index - 1]?.editor.state.doc.content.size - 1
+            );
+          }
+        }, 0);
+      }
+    }
+  };
+  const handleDeleting = (index: number) => {
+    onDeleteNote(userId, index);
+    if (index > 0) {
+      setTimeout(() => {
+        if (notesRef.current[index - 1]) {
+          notesRef.current[index - 1]?.editor.commands.focus();
+          notesRef.current[index - 1]?.editor.commands.setTextSelection(
+            notesRef.current[index - 1]?.editor.state.doc.content.size - 1
+          );
+        }
+      }, 0);
+    }
+  };
+
+  const isActive = activeUserId === userId;
+
+  return (
+    <>
+      <NotesWindow
+        onClick={() => setActiveUser(userId)}
+        $isActive={isActive}
+        className="notes-window"
+      >
+        {notes.map((note, index) => (
+          <Note
+            key={index}
+            index={index}
+            date={note.date}
+            content={note.content}
+            onContentChange={(newContent: string) =>
+              onContentChange(userId, index, newContent)
+            }
+            onDeleteNote={() => handleDeleting(index)}
+            onKeyDown={(event: KeyboardEvent) => handleKeyDown(index, event)}
+            setNoteRef={(el: NoteEditorRef) => (notesRef.current[index] = el)}
+          ></Note>
+        ))}
+        <Button onClick={() => onNewNote(userId)}>Добавить заметку</Button>
+      </NotesWindow>
+    </>
+  );
+};
+
+interface NoteProps {
+  index: number;
+  content: string;
+  onContentChange: (content: string) => void;
+  date: string;
+  onDeleteNote: () => void;
+  onKeyDown: (event: KeyboardEvent) => void;
+  setNoteRef: (el: NoteEditorRef) => void;
+}
+
+const Note = ({
+  content,
+  onContentChange,
+  date,
+  onDeleteNote,
+  setNoteRef,
+}: NoteProps) => {
+  const editor = useEditor({
+    extensions: [
+      StarterKit.configure({
+        heading: {
+          levels: [1, 2],
+        },
+      }),
+      TaskList,
+      TaskItem,
+      TextStyle,
+      Color,
+      Link.configure({
+        openOnClick: false,
+        autolink: true,
+        defaultProtocol: "https",
+      }),
+
+      Mention.configure({
+        HTMLAttributes: {
+          class: "mention",
+        },
+        suggestion,
+        // renderText({ options, node }) {
+        //   return `${options.suggestion.char}${
+        //     node.attrs.label ?? node.attrs.id
+        //   }`;
+        // },
+        // suggestion: {
+        //   items: ({ query }) => {
+        //     return [
+        //       { id: "Steve", label: "Steve" },
+        //       { id: "Bob", label: "Bob" },
+        //       { id: "Joe", label: "Joe" },
+        //       { id: "Mike", label: "Mike" },
+        //     ].filter((item) =>
+        //       item.label.toLowerCase().includes(query.toLowerCase())
+        //     );
+        //   },
+        //   render: () => {
+        //     const div = document.createElement("div");
+        //     div.classList.add("suggestion");
+
+        //     return {
+        //       onStart: (props) => {
+        //         div.innerHTML = props.items
+        //           .map(
+        //             (item) => `<div class='suggestion-item'>${item.label}</div>`
+        //           )
+        //           .join("");
+
+        //         props.popup.setContent(div);
+        //       },
+        //       onUpdate(props) {
+        //         div.innerHTML = props.items
+        //           .map(
+        //             (item) => `<div class='suggestion-item'>${item.label}</div>`
+        //           )
+        //           .join("");
+        //       },
+        //       onKeyDown(props) {
+        //         if (props.event.key === "Escape") {
+        //           props.close();
+        //           return true;
+        //         }
+        //         return false;
+        //       },
+        //     };
+        //   },
+        // },
+      }),
+    ],
+    content: content,
+    onUpdate: ({ editor }) => {
+      onContentChange(editor.getHTML());
+    },
+  });
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Backspace" && editor?.isEmpty) {
+        event.preventDefault();
+        onDeleteNote();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [editor, onDeleteNote]);
+
+  useEffect(() => {
+    if (editor && setNoteRef) {
+      setNoteRef({
+        editor: {
+          commands: editor.commands,
+          state: editor.state,
+          isEmpty: editor.isEmpty,
+        },
+      });
+    }
+  }, [editor, setNoteRef]);
+
+  // useEffect(() => {
+  //   const handleKeyDown = (event) => {
+  //     if (event.key === "Backspace" && editor.isEmpty) {
+  //       onDeleteNote();
+  //     }
+  //   };
+
+  //   document.addEventListener("keydown", handleKeyDown);
+  //   return () => {
+  //     document.removeEventListener("keydown", handleKeyDown);
+  //   };
+  // }, [editor, onDeleteNote]);
+  const setLink = useCallback(() => {
+    const previousUrl = editor?.getAttributes("link").href;
+    const url = window.prompt("URL", previousUrl);
+
+    // cancelled
+    if (url === null) {
+      return;
+    }
+
+    // empty
+    if (url === "") {
+      editor?.chain().focus().extendMarkRange("link").unsetLink().run();
+
+      return;
+    }
+
+    // update link
+    editor
+      ?.chain()
+      .focus()
+      .extendMarkRange("link")
+      .setLink({ href: url })
+      .run();
+  }, [editor]);
+
+  if (!editor) {
+    return null;
   }
   return (
-    <div>
-      <NotesWindow>
-        {notes.map((note, index) => (
-          <div key={index}>
-            <Note
-              key={index} // Ensure unique key for each note
-              ref={(el) => {
-                if (el) notesRef.current[index] = el;
-              }}
-              date={note.date}
-              // @ts-expect-error @typescript-eslint/ban-ts-comment
-              content={note.content}
-              onContentChange={(newContent) =>
-                // @ts-expect-error @typescript-eslint/ban-ts-comment
+    <>
+      <NoteContainer>
+        <DateText>{formatDate(date)}</DateText>
+        {/* <Note
+          date={date}
+          content={content}
+          onContentChange={(newContent) =>
+            onContentChange(index, newContent)
+          }
+          onDeleteNote={() => handleDeleteNote(index)}
+        /> */}
 
-                handleContentChange(index, newContent)
-              }
-              onDeleteNote={() => handleDeleteNote(index)}
-            />
-          </div>
-        ))}
-        <Button onClick={handleNewNote}>
-          <svg
-            width="20"
-            height="20"
-            viewBox="0 0 20 20"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M3 10H17"
-              stroke="currentColor"
-              stroke-width="1.5"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            />
-            <path
-              d="M10 17V3"
-              stroke="currentColor"
-              stroke-width="1.5"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            />
-          </svg>
-          Добавить заметку
-        </Button>
-      </NotesWindow>
-    </div>
+        {editor && (
+          <BubbleMenu editor={editor} tippyOptions={{ duration: 100 }}>
+            <div className="bubble-menu">
+              <button
+                onClick={setLink}
+                className={editor.isActive("link") ? "is-active" : ""}
+              >
+                Set link
+              </button>
+              {editor.isActive("link") && (
+                <button
+                  onClick={() => editor.chain().focus().unsetLink().run()}
+                >
+                  Unset link
+                </button>
+              )}
+              <button
+                onClick={() => editor.chain().focus().toggleBold().run()}
+                className={editor.isActive("bold") ? "is-active" : ""}
+              >
+                Bold
+              </button>
+              <button
+                onClick={() => editor.chain().focus().toggleItalic().run()}
+                className={editor.isActive("italic") ? "is-active" : ""}
+              >
+                Italic
+              </button>
+              <button
+                onClick={() => editor.chain().focus().toggleStrike().run()}
+                className={editor.isActive("strike") ? "is-active" : ""}
+              >
+                Strike
+              </button>
+
+              <button
+                onClick={() => editor.chain().focus().toggleTaskList().run()}
+                className={editor.isActive("taskList") ? "is-active" : ""}
+              >
+                Task List
+              </button>
+            </div>
+          </BubbleMenu>
+        )}
+        <EditorContent editor={editor} />
+      </NoteContainer>
+    </>
   );
 };
 
 export default App;
+
+const formatDate = (date: string) => {
+  const options = { day: "numeric", month: "short" } as const;
+  const dateObj = new Date(date);
+  return dateObj.toLocaleDateString("en-US", options);
+};
