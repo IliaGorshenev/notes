@@ -383,7 +383,7 @@ const NoteWindow = ({
 
   const handleDeleting = (index: number) => {
     onDeleteNote(userId, index);
-    setUpdateKey(updateKey + 1); // Trigger re-render
+    setUpdateKey(updateKey + 1);
     if (index > 0) {
       setTimeout(() => {
         if (notesRef.current[index - 1]) {
@@ -395,20 +395,28 @@ const NoteWindow = ({
       }, 0);
     }
   };
-  useEffect(() => {
-    if (notesRef.current.length > 0) {
-      notesRef.current.forEach((note, index) => {
-        if (note?.editor) {
-          setTimeout(() => {
-            note.editor.commands.focus();
-            note.editor.commands.setTextSelection(
-              note.editor.state.doc.content.size
-            );
-          }, 0);
-        }
-      });
-    }
-  }, [updateKey, notes]);
+
+  const handleContentChange = (
+    userId: string,
+    index: number,
+    newContent: string
+  ) => {
+    onContentChange(userId, index, newContent);
+  };
+  // useEffect(() => {
+  //   if (notesRef.current.length > 0) {
+  //     notesRef.current.forEach((note, index) => {
+  //       if (note?.editor) {
+  //         setTimeout(() => {
+  //           note.editor.commands.focus();
+  //           note.editor.commands.setTextSelection(
+  //             note.editor.state.doc.content.size
+  //           );
+  //         }, 0);
+  //       }
+  //     });
+  //   }
+  // }, [updateKey, notes]);
 
   const isActive = activeUserId === userId;
   console.log("this is note", notes);
@@ -419,20 +427,31 @@ const NoteWindow = ({
         $isActive={isActive}
         className="notes-window"
       >
-        {notes.map((note, index) => (
-          <Note
-            key={`${note.date}-${updateKey}`}
-            index={index}
-            date={note.date}
-            content={note.content}
-            onContentChange={(newContent: string) => {
-              onContentChange(userId, index, newContent);
-            }}
-            onDeleteNote={() => handleDeleting(index)}
-            onKeyDown={(event: KeyboardEvent) => handleKeyDown(index, event)}
-            setNoteRef={(el: NoteEditorRef) => (notesRef.current[index] = el)}
-          ></Note>
-        ))}
+        {notes.map((note, index) => {
+          // const num = Math.random();
+          return (
+            <Note
+              key={`${updateKey}+${index * 1000}`}
+              index={index}
+              date={note.date}
+              content={note.content}
+              onContentChange={(newContent: string) => {
+                handleContentChange(userId, index, newContent);
+                // setTimeout(() => {
+                //   if (notesRef.current[index]) {
+                //     notesRef.current[index].editor.commands.focus();
+                //     notesRef.current[index].editor.commands.setTextSelection(
+                //       notesRef.current[index].editor.state.doc.content.size
+                //     );
+                //   }
+                // }, 50);
+              }}
+              onDeleteNote={() => handleDeleting(index)}
+              onKeyDown={(event: KeyboardEvent) => handleKeyDown(index, event)}
+              setNoteRef={(el: NoteEditorRef) => (notesRef.current[index] = el)}
+            ></Note>
+          );
+        })}
         <Button onClick={() => onNewNote(userId)}>Добавить заметку</Button>
       </NotesWindow>
     </>
@@ -574,7 +593,6 @@ const Note = ({
 
       return;
     }
-
     // update link
     editor
       ?.chain()
@@ -587,6 +605,7 @@ const Note = ({
   if (!editor) {
     return null;
   }
+
   return (
     <>
       <NoteContainer>
