@@ -22,21 +22,21 @@ const initialUsersNotes = [
     userId: "user1",
     notes: [
       {
-        date: "2024-10-10",
+        date: "2024-10-10T00:00:00Z",
         content: "<p>Это первая заметка пользователя 1.</p>",
       },
       {
-        date: "2024-08-10",
+        date: "2024-08-10T00:00:00Z",
         content:
           "<p>Это вторая заметка пользователя 1. Добавим немного деталей.</p>",
       },
       {
-        date: "2024-06-20",
+        date: "2024-06-20T00:00:00Z",
         content:
           "<p>Третья заметка пользователя 1 с дополнительной информацией.</p>",
       },
       {
-        date: "2024-05-15",
+        date: "2024-05-15T00:00:00Z",
         content:
           "<ul><li>Заметка 4. Пункт 1</li><li>Заметка 4. Пункт 2</li></ul>",
       },
@@ -46,20 +46,20 @@ const initialUsersNotes = [
     userId: "user2",
     notes: [
       {
-        date: "2024-09-10",
+        date: "2024-09-10T00:00:00Z",
         content:
           "<p>Много текст Много текст Много текст Много текст Много текст Много текст Много текст Много текст Много текст Много текст Много текст Много текст Много текст Много текст Много текст Много текст Много текст Много текст Много текст Много текст Много текст Много текст Много текст Много текст Много текст Много текст Много текст </p>",
       },
       {
-        date: "2024-07-10",
+        date: "2024-07-10T00:00:00Z",
         content: "<p>Это вторая заметка пользователя 2.</p>",
       },
       {
-        date: "2024-06-18",
+        date: "2024-06-18T00:00:00Z",
         content: "<ul><li>Пункт 1</li><li>Пункт 2</li><li>Пункт 3</li></ul>",
       },
       {
-        date: "2024-05-22",
+        date: "2024-05-22T00:00:00Z",
         content:
           "<p>Четвертая заметка пользователя 2 с рандомными мыслями.</p>",
       },
@@ -69,21 +69,21 @@ const initialUsersNotes = [
     userId: "user3",
     notes: [
       {
-        date: "2024-11-01",
+        date: "2024-11-01T00:00:00Z",
         content:
           "<p>Первая заметка пользователя 3. Очень интересный текст.</p>",
       },
       {
-        date: "2024-10-20",
+        date: "2024-10-20T00:00:00Z",
         content: "<p>Вторая заметка пользователя 3 с различными идеями.</p>",
       },
       {
-        date: "2024-09-05",
+        date: "2024-09-05T00:00:00Z",
         content:
           "<p>Очень длинная и подробная заметка пользователя 3, заполненная множеством инсайтов, мыслей и анализов различных тем. Эта заметка продолжается и продолжается, предоставляя огромное количество информации и ценных данных для всех, кто ее прочитает. Поистине впечатляющая работа.</p>",
       },
       {
-        date: "2024-08-25",
+        date: "2024-08-25T00:00:00Z",
         content: "<p>Еще одна заметка пользователя 3 с размышлениями.</p>",
       },
     ],
@@ -91,22 +91,19 @@ const initialUsersNotes = [
   {
     userId: "user4",
     notes: [
+      { date: "2024-04-01T00:00:00Z", content: "<p>Еще какая-то заметка.</p>" },
       {
-        date: "2024-04-01",
-        content: "<p>Еще какая-то заметка.</p>",
-      },
-      {
-        date: "2024-09-15",
+        date: "2024-09-15T00:00:00Z",
         content:
           "<p>Вторая заметка пользователя 4 с несколькими интересными пунктами.</p>",
       },
       {
-        date: "2024-10-20",
+        date: "2024-10-20T00:00:00Z",
         content:
           "<ul><li>Новая наверное заметка</li><li>Много важных тем</li><li>Много информации</li></ul>",
       },
       {
-        date: "2024-09-20",
+        date: "2024-09-20T00:00:00Z",
         content:
           "<p>Последняя заметка пользователя 4 с заключительными мыслями.</p>",
       },
@@ -223,7 +220,7 @@ const App = () => {
                 ? {
                     ...note,
                     content: newContent,
-                    date: new Date().toISOString().split("T")[0],
+                    date: new Date().toISOString(),
                   }
                 : note
             ),
@@ -252,7 +249,7 @@ const App = () => {
 
   const handleNewNote = (userId: string) => {
     const newNote = {
-      date: new Date().toISOString().split("T")[0],
+      date: new Date().toISOString(),
       content: "",
     };
     const updatedUsersNotes = users.map((user) =>
@@ -398,6 +395,20 @@ const NoteWindow = ({
       }, 0);
     }
   };
+  useEffect(() => {
+    if (notesRef.current.length > 0) {
+      notesRef.current.forEach((note, index) => {
+        if (note?.editor) {
+          setTimeout(() => {
+            note.editor.commands.focus();
+            note.editor.commands.setTextSelection(
+              note.editor.state.doc.content.size
+            );
+          }, 0);
+        }
+      });
+    }
+  }, [updateKey, notes]);
 
   const isActive = activeUserId === userId;
   console.log("this is note", notes);
@@ -414,9 +425,9 @@ const NoteWindow = ({
             index={index}
             date={note.date}
             content={note.content}
-            onContentChange={(newContent: string) =>
-              onContentChange(userId, index, newContent)
-            }
+            onContentChange={(newContent: string) => {
+              onContentChange(userId, index, newContent);
+            }}
             onDeleteNote={() => handleDeleting(index)}
             onKeyDown={(event: KeyboardEvent) => handleKeyDown(index, event)}
             setNoteRef={(el: NoteEditorRef) => (notesRef.current[index] = el)}
@@ -535,18 +546,6 @@ const Note = ({
       document.removeEventListener("keydown", handleKeyDown);
     };
   }, [editor, onDeleteNote]);
-
-  useEffect(() => {
-    if (editor && setNoteRef) {
-      setNoteRef({
-        editor: {
-          commands: editor.commands,
-          state: editor.state,
-          isEmpty: editor.isEmpty,
-        },
-      });
-    }
-  }, [editor, setNoteRef]);
 
   // useEffect(() => {
   //   const handleKeyDown = (event) => {
