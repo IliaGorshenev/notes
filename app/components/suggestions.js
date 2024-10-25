@@ -1,7 +1,7 @@
 import { ReactRenderer } from "@tiptap/react";
 import tippy from "tippy.js";
 
-import MentionList from "./MentionList.jsx";
+import MentionRef from "./MentionList.jsx";
 
 export default {
   items: ({ query }) => {
@@ -42,7 +42,7 @@ export default {
 
     return {
       onStart: (props) => {
-        component = new ReactRenderer(MentionList, {
+        component = new ReactRenderer(MentionRef, {
           props,
           editor: props.editor,
         });
