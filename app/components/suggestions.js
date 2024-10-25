@@ -1,7 +1,7 @@
 import { ReactRenderer } from "@tiptap/react";
 import tippy from "tippy.js";
 
-import MentionRef from "./MentionList.jsx";
+import MentionRef from "./MentionRef.jsx";
 
 export default {
   items: ({ query }) => {
