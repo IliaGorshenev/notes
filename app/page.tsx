@@ -169,7 +169,7 @@ const Button = styled.button`
   }
 `;
 
-const NoteContainer = styled.div`
+const NoteContainer = styled.div<NotesWindowProps>`
   margin: 0;
   display: grid;
   grid-template-columns: 1fr;
@@ -180,6 +180,7 @@ const NoteContainer = styled.div`
   white-space: nowrap;
   text-overflow: ellipsis;
   padding-left: 42px;
+  pointer-events: ${({ $isActive }) => ($isActive ? "all" : "none")};
 `;
 
 const DateText = styled.span`
@@ -381,6 +382,10 @@ const NoteWindow = ({
     }
   };
 
+  useEffect(() => {
+    setUpdateKey(updateKey + 1);
+  }, [activeUserId]);
+
   const handleDeleting = (index: number) => {
     onDeleteNote(userId, index);
     setUpdateKey(updateKey + 1);
@@ -434,6 +439,7 @@ const NoteWindow = ({
               key={`${updateKey}+${index * 1000}`}
               index={index}
               date={note.date}
+              isActive={isActive}
               content={note.content}
               onContentChange={(newContent: string) => {
                 handleContentChange(userId, index, newContent);
@@ -466,6 +472,7 @@ interface NoteProps {
   onDeleteNote: () => void;
   onKeyDown: (event: KeyboardEvent) => void;
   setNoteRef: (el: NoteEditorRef) => void;
+  isActive: boolean | null;
 }
 
 const Note = ({
@@ -474,6 +481,7 @@ const Note = ({
   date,
   onDeleteNote,
   setNoteRef,
+  isActive,
 }: NoteProps) => {
   const editor = useEditor({
     extensions: [
@@ -578,6 +586,12 @@ const Note = ({
   //     document.removeEventListener("keydown", handleKeyDown);
   //   };
   // }, [editor, onDeleteNote]);
+  useEffect(() => {
+    if (editor && setNoteRef) {
+      setNoteRef({ editor });
+    }
+  }, [editor, setNoteRef]);
+
   const setLink = useCallback(() => {
     const previousUrl = editor?.getAttributes("link").href;
     const url = window.prompt("URL", previousUrl);
@@ -608,7 +622,7 @@ const Note = ({
 
   return (
     <>
-      <NoteContainer>
+      <NoteContainer $isActive={isActive}>
         <DateText>{formatDate(date)}</DateText>
         {/* <Note
           date={date}
