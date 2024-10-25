@@ -87,18 +87,18 @@ const initialUsersNotes = [
     userId: "user4",
     notes: [
       {
-        date: "2024-12-01",
-        content: "<p>Первая заметка пользователя 4. Краткая, но сильная.</p>",
+        date: "2024-04-01",
+        content: "<p>Еще какая-то заметка.</p>",
       },
       {
-        date: "2024-11-15",
+        date: "2024-09-15",
         content:
           "<p>Вторая заметка пользователя 4 с несколькими интересными пунктами.</p>",
       },
       {
-        date: "2024-10-30",
+        date: "2024-10-20",
         content:
-          "<ul><li>Очень подробная заметка</li><li>Много важных тем</li><li>Много информации</li></ul>",
+          "<ul><li>Новая наверное заметка</li><li>Много важных тем</li><li>Много информации</li></ul>",
       },
       {
         date: "2024-09-20",
@@ -138,13 +138,13 @@ const NotesWindow = styled.div<NotesWindowProps>`
   overflow: ${({ $isActive }) => ($isActive ? "visible" : "hidden")};
   transition: max-height 0.5s ease-in-out;
 
+  > :not(:first-child) {
+    display: ${({ $isActive }) => ($isActive ? "block" : "none")};
+  }
+
   > :first-child {
     max-height: ${({ $isActive }) => ($isActive ? "none" : "24px")};
     overflow: ${({ $isActive }) => ($isActive ? "visible" : "hidden")};
-  }
-
-  > :not(:first-child) {
-    display: ${({ $isActive }) => ($isActive ? "block" : "none")};
   }
 `;
 
@@ -192,9 +192,18 @@ const DateText = styled.span`
   z-index: 10;
 `;
 
+// const findLatestNote = (notes: { date: string; content: string }[]) => {
+//   return notes.reduce((latest, note) => {
+//     return new Date(note.date) > new Date(latest.date) ? note : latest;
+//   }, notes[0]);
+// };
 const App = () => {
   const [{ users, activeUserId }, setUsersNotes] = useAtom(usersNotesAtom);
-
+  // const findLatestNote = (notes) => {
+  //   return notes.reduce((latest, note) => {
+  //     return new Date(note.date) > new Date(latest.date) ? note : latest;
+  //   }, notes[0]);
+  // };
   const handleContentChange = (
     userId: string,
     index: number,
@@ -257,20 +266,27 @@ const App = () => {
   const handleSetActiveUser = (userId: string) => {
     setUsersNotes((prev) => ({ ...prev, activeUserId: userId }));
   };
+
   return (
     <>
-      {users.map(({ userId, notes }) => (
-        <NoteWindow
-          key={userId}
-          userId={userId}
-          activeUserId={activeUserId}
-          notes={notes}
-          onContentChange={handleContentChange}
-          onNewNote={handleNewNote}
-          onDeleteNote={handleDeleteNote}
-          setActiveUser={handleSetActiveUser}
-        />
-      ))}
+      {users.map(({ userId, notes }) => {
+        // const latestNote = findLatestNote(notes);
+        const displayedNotes = notes;
+        const allNotes = notes;
+        return (
+          <NoteWindow
+            key={userId}
+            userId={userId}
+            allNotes={allNotes}
+            activeUserId={activeUserId}
+            notes={displayedNotes}
+            onContentChange={handleContentChange}
+            onNewNote={handleNewNote}
+            onDeleteNote={handleDeleteNote}
+            setActiveUser={handleSetActiveUser}
+          />
+        );
+      })}
     </>
   );
 };
@@ -283,6 +299,7 @@ interface NoteWindowProps {
   onDeleteNote: (userId: string, index: number) => void;
   setActiveUser: (userId: string) => void;
   activeUserId: string | null;
+  allNotes: { date: string; content: string }[];
 }
 interface NoteEditorRef {
   editor: {
@@ -307,9 +324,36 @@ const NoteWindow = ({
   onNewNote,
   onDeleteNote,
   setActiveUser,
+  allNotes,
   activeUserId,
 }: NoteWindowProps) => {
   const notesRef = useRef<NoteEditorRef[]>([]);
+
+  const handleSetActiveUser = (userId: string) => {
+    setActiveUser(userId);
+    if (!isActive) {
+      setTimeout(() => {
+        console.log(allNotes);
+        const latestNoteIndex = allNotes.findIndex(
+          (note) =>
+            new Date(note.date) >=
+            new Date(
+              Math.max.apply(
+                null,
+                notes.map((n) => new Date(n.date).getTime())
+              )
+            )
+        );
+
+        if (latestNoteIndex !== -1 && notesRef.current[latestNoteIndex]) {
+          notesRef.current[latestNoteIndex].editor.commands.focus();
+          notesRef.current[latestNoteIndex].editor.commands.setTextSelection(
+            notesRef.current[latestNoteIndex].editor.state.doc.content.size - 1
+          );
+        }
+      }, 0);
+    }
+  };
 
   const handleKeyDown = (index: number, event: KeyboardEvent) => {
     if (event.key === "Backspace" && notesRef.current[index]?.editor?.isEmpty) {
@@ -342,11 +386,11 @@ const NoteWindow = ({
   };
 
   const isActive = activeUserId === userId;
-
+  console.log("this is note", notes);
   return (
     <>
       <NotesWindow
-        onClick={() => setActiveUser(userId)}
+        onClick={() => handleSetActiveUser(userId)}
         $isActive={isActive}
         className="notes-window"
       >
